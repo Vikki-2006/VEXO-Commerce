@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Express Checkout | VEXO Systems{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div id="checkout-main-container" class="pt-28 pb-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 text-ink theme-transition">
+  <!-- Layout switches dynamically between active form and completed state -->
+  <div id="checkout-active-view">
+    <div class="mb-8">
+      <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-1">256-BIT SSL ENCRYPTED</span>
+      <h1 class="text-3xl font-black text-ink tracking-tight font-serif flex items-center gap-2">
+        Express Checkout <i data-lucide="lock" class="w-5 h-5 text-gold"></i>
+      </h1>
+    </div>
+
+    <form onsubmit="VexoStore.checkout.handleSubmit(event)" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <!-- Left Address & Payment Form -->
+      <div class="lg:col-span-7 space-y-6">
+        <!-- Shipping Address -->
+        <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-4">
+          <h3 class="text-base font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i> Shipping Address
+          </h3>
+
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="text-[10px] font-bold text-stone uppercase block mb-1">Street Address</label>
+              <input type="text" id="ship-street" value="Strandvägen 45" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] font-bold text-stone uppercase block mb-1">City</label>
+                <input type="text" id="ship-city" value="Stockholm" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-stone uppercase block mb-1">State / Region</label>
+                <input type="text" id="ship-state" value="ST" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] font-bold text-stone uppercase block mb-1">Postal Code</label>
+                <input type="text" id="ship-zip" value="114 56" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-stone uppercase block mb-1">Country</label>
+                <input type="text" id="ship-country" value="Sweden" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Speed -->
+        <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-4">
+          <h3 class="text-base font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="truck" class="w-4 h-4 text-ink"></i> Delivery Speed
+          </h3>
+
+          <div class="space-y-2">
+            <div id="ship-method-standard" onclick="VexoStore.checkout.setShippingMethod('standard')" class="p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all bg-warm border-ink text-ink font-bold">
+              <div>
+                <h4 class="text-xs font-bold">Standard Express Courier</h4>
+                <p class="text-[11px] text-stone font-semibold">3-5 Business Days</p>
+              </div>
+              <span class="text-xs font-black text-gold" id="ship-standard-price">FREE</span>
+            </div>
+
+            <div id="ship-method-express" onclick="VexoStore.checkout.setShippingMethod('express')" class="p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all bg-card border-sand text-stone hover:text-ink">
+              <div>
+                <h4 class="text-xs font-bold">Priority Air Freight</h4>
+                <p class="text-[11px] text-stone font-semibold">1-2 Business Days</p>
+              </div>
+              <span class="text-xs font-black text-gold">₹1,500</span>
+            </div>
+
+            <div id="ship-method-overnight" onclick="VexoStore.checkout.setShippingMethod('overnight')" class="p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all bg-card border-sand text-stone hover:text-ink">
+              <div>
+                <h4 class="text-xs font-bold">Overnight Air Dispatch</h4>
+                <p class="text-[11px] text-stone font-semibold">Next Day Guarantee</p>
+              </div>
+              <span class="text-xs font-black text-gold">₹2,500</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mock Credit Card Payment -->
+        <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-4">
+          <h3 class="text-base font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="credit-card" class="w-4 h-4 text-emerald-500"></i> Payment Telemetry
+          </h3>
+
+          <div class="space-y-4">
+            <div>
+              <label class="text-[10px] font-bold text-stone uppercase block mb-1">Cardholder Name</label>
+              <input type="text" id="pay-name" value="Astrid Lindqvist" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-stone uppercase block mb-1">Card Number</label>
+              <input type="text" id="pay-card" value="4532 9824 1002 9824" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] font-bold text-stone uppercase block mb-1">Expires</label>
+                <input type="text" id="pay-expiry" value="12/28" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-stone uppercase block mb-1">CVC / CVV</label>
+                <input type="text" id="pay-cvc" value="999" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Summary -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-6">
+          <h3 class="text-sm font-bold text-ink border-b border-sand pb-4 uppercase tracking-wider">
+            Order Summary (<span id="checkout-summary-count">0</span> items)
+          </h3>
+
+          <div class="space-y-3 max-h-60 overflow-y-auto pr-1" id="checkout-items-list">
+            <!-- Rendered via JS -->
+          </div>
+
+          <div class="space-y-2 text-xs font-semibold text-stone pt-4 border-t border-sand">
+            <div class="flex justify-between">
+              <span>Subtotal</span>
+              <span class="text-ink font-bold" id="checkout-subtotal">₹0</span>
+            </div>
+            <div class="flex justify-between text-gold hidden" id="checkout-discount-row">
+              <span>Coupon Discount (<span id="checkout-coupon-code"></span>)</span>
+              <span id="checkout-discount">-₹0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Estimated Tax (8%)</span>
+              <span class="text-ink font-bold" id="checkout-tax">₹0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Shipping Fee</span>
+              <span class="text-ink font-bold" id="checkout-shipping">₹1,500</span>
+            </div>
+
+            <div class="flex justify-between text-lg font-black text-ink pt-3 border-t border-sand">
+              <span>Total Due</span>
+              <span class="text-gold font-black" id="checkout-total">₹0</span>
+            </div>
+          </div>
+
+          <button type="submit" id="checkout-submit-btn" class="btn-matte btn-primary w-full py-3 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+            Pay <span id="checkout-pay-label">₹0</span> & Complete Order <i data-lucide="arrow-right" class="w-4 h-4 text-gold"></i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Confirmed Order View -->
+  <div id="checkout-completed-view" class="max-w-3xl mx-auto text-center hidden">
+    <div class="studio-card rounded-2xl p-10 border border-sand bg-card space-y-6 shadow-modal">
+      <div class="w-16 h-16 rounded-full bg-success/15 text-success flex items-center justify-center mx-auto">
+        <i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-500"></i>
+      </div>
+
+      <div>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2">ORDER CONFIRMED</span>
+        <h1 class="text-3xl font-black text-ink font-serif">Thank You for Your Order</h1>
+        <p class="text-xs text-stone mt-1 font-semibold">
+          Dispatch Reference: <strong class="text-gold" id="completed-ref">VEXO-99120</strong>
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-warm border border-sand text-left text-xs space-y-2">
+        <div class="flex justify-between">
+          <span class="text-stone">Destination Address:</span>
+          <span class="font-bold text-ink" id="completed-address">Strandvägen 45, Stockholm, Sweden</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-stone">Total Amount Paid:</span>
+          <span class="font-extrabold text-gold" id="completed-total">₹0</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-stone">Estimated Dispatch:</span>
+          <span class="font-bold text-ink">2-3 Business Days</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-4">
+        <a href="/account" class="btn-matte btn-primary flex-1 py-3 text-xs font-bold text-center cursor-pointer">Track Order Status</a>
+        <a href="/" class="btn-matte btn-secondary flex-1 py-3 text-xs font-bold text-center cursor-pointer">Return to Index</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.checkout = {
+    shippingMethod: 'standard',
+    
+    init() {
+      // Direct login gate
+      if (!VexoStore.auth.isAuthenticated()) {
+        VexoStore.toasts.add({
+          type: 'info',
+          title: 'Authentication Required',
+          message: 'Please sign in to proceed with the checkout.'
+        });
+        window.location.href = '/auth?redirect=/checkout';
+        return;
+      }
+      
+      const user = VexoStore.auth.getUser();
+      if (user && user.name) {
+        document.getElementById('pay-name').value = user.name;
+      }
+      
+      this.updateSummary();
+    },
+    
+    setShippingMethod(method) {
+      this.shippingMethod = method;
+      
+      // Update UI classes
+      ['standard', 'express', 'overnight'].forEach(m => {
+        const row = document.getElementById(`ship-method-${m}`);
+        if (row) {
+          if (m === method) {
+            row.className = 'p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all bg-warm border-ink text-ink font-bold';
+          } else {
+            row.className = 'p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all bg-card border-sand text-stone hover:text-ink';
+          }
+        }
+      });
+      
+      this.updateSummary();
+    },
+    
+    updateSummary() {
+      const items = VexoStore.cart.getItems();
+      if (items.length === 0) {
+        window.location.href = '/shop';
+        return;
+      }
+      
+      const count = VexoStore.cart.getItemCount();
+      document.getElementById('checkout-summary-count').textContent = count;
+      
+      const listContainer = document.getElementById('checkout-items-list');
+      listContainer.innerHTML = items.map(it => `
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-3">
+            <img src="${it.product.images[0]}" alt="" class="w-10 h-10 rounded-lg object-cover border border-sand shrink-0 bg-card">
+            <div>
+              <h5 class="font-bold text-ink line-clamp-1">${it.product.title}</h5>
+              <span class="text-stone">Qty: ${it.quantity}</span>
+            </div>
+          </div>
+          <span class="font-black text-ink">${VexoStore.formatCurrency(it.product.price * it.quantity)}</span>
+        </div>
+      `).join('');
+      
+      const subtotal = VexoStore.cart.getSubtotal();
+      document.getElementById('checkout-subtotal').textContent = VexoStore.formatCurrency(subtotal);
+      
+      // Standard shipping fee
+      const standardFee = VexoStore.cart.getShippingFee();
+      const standardLabel = document.getElementById('ship-standard-price');
+      if (standardLabel) {
+        standardLabel.textContent = standardFee === 0 ? 'FREE' : VexoStore.formatCurrency(1500);
+      }
+      
+      // Shipping methods calculation
+      const shippingFees = {
+        standard: standardFee,
+        express: 1500,
+        overnight: 2500
+      };
+      
+      const shippingFee = shippingFees[this.shippingMethod];
+      document.getElementById('checkout-shipping').textContent = shippingFee === 0 ? 'FREE' : VexoStore.formatCurrency(shippingFee);
+      
+      const discount = VexoStore.cart.getDiscountAmount();
+      const couponCode = VexoStore.cart.getCouponCode();
+      const discountRow = document.getElementById('checkout-discount-row');
+      const discountElem = document.getElementById('checkout-discount');
+      const couponCodeLabel = document.getElementById('checkout-coupon-code');
+      
+      if (discountRow && discountElem && couponCodeLabel) {
+        if (discount > 0) {
+          couponCodeLabel.textContent = couponCode;
+          discountElem.textContent = `-${VexoStore.formatCurrency(discount)}`;
+          discountRow.classList.remove('hidden');
+        } else {
+          discountRow.classList.add('hidden');
+        }
+      }
+      
+      const tax = Math.round(subtotal * 0.08);
+      document.getElementById('checkout-tax').textContent = VexoStore.formatCurrency(tax);
+      
+      const grandTotal = Math.max(0, subtotal - discount + shippingFee + tax);
+      document.getElementById('checkout-total').textContent = VexoStore.formatCurrency(grandTotal);
+      document.getElementById('checkout-pay-label').textContent = VexoStore.formatCurrency(grandTotal);
+    },
+    
+    async handleSubmit(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('checkout-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-ivory border-t-transparent rounded-full animate-spin"></div> processing...';
+      
+      const street = document.getElementById('ship-street').value.trim();
+      const city = document.getElementById('ship-city').value.trim();
+      const state = document.getElementById('ship-state').value.trim();
+      const zipCode = document.getElementById('ship-zip').value.trim();
+      const country = document.getElementById('ship-country').value.trim();
+      
+      const items = VexoStore.cart.getItems().map(it => ({
+        productId: it.product.id,
+        price: it.product.price,
+        quantity: it.quantity,
+        color: it.color || '',
+        size: it.size || ''
+      }));
+      
+      const standardFee = VexoStore.cart.getShippingFee();
+      const shippingFees = {
+        standard: standardFee,
+        express: 1500,
+        overnight: 2500
+      };
+      
+      const shippingFee = shippingFees[this.shippingMethod];
+      const couponCode = VexoStore.cart.getCouponCode() || undefined;
+      
+      try {
+        const order = await vexoApi.fetch('/api/v1/orders', {
+          method: 'POST',
+          body: {
+            items: items,
+            shippingAddress: { street, city, state, zipCode, country },
+            couponCode: couponCode,
+            shippingFee: shippingFee
+          }
+        });
+        
+        VexoStore.toasts.add({
+          type: 'success',
+          title: 'Order Telemetry Confirmed',
+          message: `Reference ${order.orderNumber} successfully processed.`
+        });
+        
+        // Explode Confetti
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 120,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#0F0E0D', '#C5A059', '#1B7A4B', '#FFFFFF']
+          });
+        }
+        
+        // Show success layout
+        document.getElementById('completed-ref').textContent = order.orderNumber;
+        document.getElementById('completed-address').textContent = `${street}, ${city}, ${country}`;
+        document.getElementById('completed-total').textContent = VexoStore.formatCurrency(order.totalAmount);
+        
+        VexoStore.cart.clear();
+        
+        document.getElementById('checkout-active-view').classList.add('hidden');
+        document.getElementById('checkout-completed-view').classList.remove('hidden');
+        
+      } catch (err) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Order Placement Failure',
+          message: err.message
+        });
+        submitBtn.disabled = false;
+        this.updateSummary();
+      }
+    }
+  };
+  
+  // Set updateCheckoutSummary as global bridge
+  window.updateCheckoutSummary = () => VexoStore.checkout.updateSummary();
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.checkout.init();
+  });
+</script>
+{% endblock %}

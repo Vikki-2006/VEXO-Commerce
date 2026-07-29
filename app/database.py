@@ -1,4 +1,3 @@
-import sys
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -13,7 +12,6 @@ try:
         connect_args=connect_args,
         pool_pre_ping=True
     )
-    # Test connection attempt
     with engine.connect() as conn:
         pass
 except Exception as e:
@@ -27,7 +25,6 @@ except Exception as e:
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 def get_db():

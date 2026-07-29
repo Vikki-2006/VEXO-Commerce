@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}VEXO Device Catalogue | Command Center{% endblock %}
+
+{% block content %}
+<div class="pt-28 pb-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 min-h-screen text-ink theme-transition">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider mb-2">ADMIN INVENTORY</span>
+      <h1 class="text-3xl font-black text-ink tracking-tight font-serif">VEXO Device Catalogue</h1>
+    </div>
+
+    <button onclick="VexoStore.adminProducts.openCreateModal()" class="btn-matte btn-primary py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+      <i data-lucide="plus" class="w-4 h-4 text-gold"></i> Add New Hardware
+    </button>
+  </div>
+
+  <!-- Search Filter -->
+  <div class="mb-6 max-w-md relative">
+    <input type="text" id="admin-prod-search" oninput="VexoStore.adminProducts.handleSearch(this.value)" placeholder="Filter devices by title or category..." class="minimal-input w-full px-4 py-2.5 pl-9 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+    <i data-lucide="search" class="w-4 h-4 text-stone absolute left-3 top-3"></i>
+  </div>
+
+  <!-- Table Card -->
+  <div class="studio-card rounded-2xl p-6 border border-sand bg-card overflow-x-auto">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="border-b border-sand text-stone uppercase font-extrabold text-[10px]">
+          <th class="pb-3 px-2">Hardware Device</th>
+          <th class="pb-3 px-2">Category</th>
+          <th class="pb-3 px-2">Price</th>
+          <th class="pb-3 px-2">Inventory Stock</th>
+          <th class="pb-3 px-2 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="admin-products-table-body" class="divide-y divide-sand">
+        <!-- Rendered dynamically -->
+        <tr>
+          <td colspan="5" class="py-8 text-center text-stone">
+            <div class="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            Loading inventory database...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Product Create/Edit Modal -->
+  <div id="product-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden">
+    <div onclick="VexoStore.adminProducts.closeModal()" class="fixed inset-0 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+    <div id="product-modal-box" class="relative w-full max-w-md bg-card border border-sand rounded-2xl p-6 shadow-modal z-10 my-auto text-ink theme-transition opacity-0 scale-95 transition-all duration-300">
+      <button onclick="VexoStore.adminProducts.closeModal()" class="absolute top-4 right-4 p-1 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors cursor-pointer">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h3 id="product-modal-title" class="text-lg font-bold tracking-tight text-ink font-serif mb-4">Add New VEXO Device</h3>
+      
+      <form onsubmit="VexoStore.adminProducts.handleSubmit(event)" class="space-y-4">
+        <input type="hidden" id="prod-form-id">
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Title</label>
+          <input type="text" id="prod-form-title" required placeholder="e.g. VEXO Keyboard X" class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Subtitle</label>
+          <input type="text" id="prod-form-subtitle" placeholder="e.g. Milled CNC keydeck" class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Category</label>
+          <select id="prod-form-category" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink bg-card">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-bold text-stone uppercase block mb-1">Price (₹)</label>
+            <input type="number" id="prod-form-price" required placeholder="15000" class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink">
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-stone uppercase block mb-1">Stock Units</label>
+            <input type="number" id="prod-form-stock" required placeholder="50" class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink">
+          </div>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Image URL</label>
+          <input type="url" id="prod-form-image" required placeholder="https://images.unsplash.com/..." class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Description</label>
+          <textarea id="prod-form-description" rows="3" placeholder="Planar composite acoustic elements..." class="minimal-input w-full p-3 rounded-lg text-xs text-ink focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" id="prod-form-submit-btn" class="btn-matte btn-primary w-full py-3 text-xs font-bold cursor-pointer">Save Device to Index</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.adminProducts = {
+    search: '',
+    products: [],
+    categories: [],
+    
+    async init() {
+      // Admin Gate
+      if (!VexoStore.auth.isAuthenticated() || !VexoStore.auth.isAdmin()) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Authentication Restricted',
+          message: 'Admin credentials required for VEXO Command Center.'
+        });
+        setTimeout(() => window.location.href = '/auth?redirect=/admin/products', 1000);
+        return;
+      }
+      
+      await this.loadCategories();
+      await this.fetchProducts();
+    },
+    
+    async loadCategories() {
+      try {
+        const cats = await vexoApi.fetch('/api/v1/categories');
+        this.categories = cats;
+        const select = document.getElementById('prod-form-category');
+        if (select) {
+          select.innerHTML = cats.map(c => `
+            <option value="${c.id}">${c.name}</option>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    },
+    
+    async fetchProducts() {
+      try {
+        let url = `/api/v1/products?limit=100`;
+        if (this.search) {
+          url += `&search=${encodeURIComponent(this.search)}`;
+        }
+        
+        const res = await vexoApi.fetch(url);
+        this.products = res.products || [];
+        this.renderTable();
+      } catch (err) {
+        VexoStore.toasts.add({ type: 'error', title: 'Inventory Retrieve Error', message: err.message });
+      }
+    },
+    
+    renderTable() {
+      const tbody = document.getElementById('admin-products-table-body');
+      if (!tbody) return;
+      
+      if (this.products.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-8 text-center text-stone font-semibold">No hardware items found in index.</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = this.products.map(p => {
+        const badgeClass = p.stock > 20 
+          ? 'inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider'
+          : 'inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-extrabold text-amber-600 uppercase tracking-wider';
+        
+        // Escape string to render safely in onclick
+        const escapedProduct = JSON.stringify(p).replace(/'/g, "&#39;");
+        
+        return `
+          <tr class="hover:bg-warm transition-colors">
+            <td class="py-3.5 px-2 font-bold text-ink flex items-center gap-3">
+              <img src="${p.images[0]}" alt="" class="w-10 h-10 rounded-lg object-cover border border-sand shrink-0 bg-card">
+              <div>
+                <span class="block text-xs font-bold text-ink font-serif">${p.title}</span>
+                <span class="text-stone text-[10px] font-semibold">${p.subtitle || ''}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-2 text-stone font-semibold">${p.category?.name || 'Hardware'}</td>
+            <td class="py-3.5 px-2 font-black text-ink">${VexoStore.formatCurrency(p.price)}</td>
+            <td class="py-3.5 px-2">
+              <span class="${badgeClass}">${p.stock} units</span>
+            </td>
+            <td class="py-3.5 px-2 text-right">
+              <button onclick='VexoStore.adminProducts.openEditModal(${escapedProduct})' class="p-1.5 text-stone hover:text-ink transition-colors cursor-pointer">
+                <i data-lucide="edit-2" class="w-4 h-4"></i>
+              </button>
+              <button onclick="VexoStore.adminProducts.handleDelete('${p.id}')" class="p-1.5 text-stone hover:text-danger transition-colors ml-1 cursor-pointer">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      if (window.lucide) window.lucide.createIcons();
+    },
+    
+    handleSearch(val) {
+      this.search = val;
+      this.debouncedFetch();
+    },
+    
+    debouncedFetchTimer: null,
+    debouncedFetch() {
+      clearTimeout(this.debouncedFetchTimer);
+      this.debouncedFetchTimer = setTimeout(() => this.fetchProducts(), 200);
+    },
+    
+    openCreateModal() {
+      document.getElementById('prod-form-id').value = '';
+      document.getElementById('prod-form-title').value = '';
+      document.getElementById('prod-form-subtitle').value = '';
+      document.getElementById('prod-form-price').value = '';
+      document.getElementById('prod-form-stock').value = '50';
+      document.getElementById('prod-form-image').value = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800';
+      document.getElementById('prod-form-description').value = '';
+      
+      document.getElementById('product-modal-title').textContent = 'Add New VEXO Device';
+      this.openModal();
+    },
+    
+    openEditModal(p) {
+      document.getElementById('prod-form-id').value = p.id;
+      document.getElementById('prod-form-title').value = p.title;
+      document.getElementById('prod-form-subtitle').value = p.subtitle || '';
+      document.getElementById('prod-form-category').value = p.categoryId;
+      document.getElementById('prod-form-price').value = Math.round(p.price);
+      document.getElementById('prod-form-stock').value = p.stock;
+      document.getElementById('prod-form-image').value = p.images[0];
+      document.getElementById('prod-form-description').value = p.description || '';
+      
+      document.getElementById('product-modal-title').textContent = 'Modify VEXO Device';
+      this.openModal();
+    },
+    
+    openModal() {
+      const overlay = document.getElementById('product-modal-overlay');
+      const box = document.getElementById('product-modal-box');
+      if (overlay && box) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+          overlay.querySelector('.fixed.inset-0').classList.replace('opacity-0', 'opacity-100');
+          box.classList.replace('opacity-0', 'opacity-100');
+          box.classList.replace('scale-95', 'scale-100');
+        }, 10);
+      }
+    },
+    
+    closeModal() {
+      const overlay = document.getElementById('product-modal-overlay');
+      const box = document.getElementById('product-modal-box');
+      if (overlay && box) {
+        overlay.querySelector('.fixed.inset-0').classList.replace('opacity-100', 'opacity-0');
+        box.classList.replace('opacity-100', 'opacity-0');
+        box.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+    },
+    
+    async handleSubmit(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('prod-form-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-ivory border-t-transparent rounded-full animate-spin"></div>';
+      
+      const id = document.getElementById('prod-form-id').value;
+      const title = document.getElementById('prod-form-title').value.trim();
+      const subtitle = document.getElementById('prod-form-subtitle').value.trim();
+      const categoryId = document.getElementById('prod-form-category').value;
+      const price = Number(document.getElementById('prod-form-price').value);
+      const stock = Number(document.getElementById('prod-form-stock').value);
+      const image = document.getElementById('prod-form-image').value.trim();
+      const description = document.getElementById('prod-form-description').value.trim();
+      
+      const payload = {
+        title,
+        subtitle,
+        categoryId,
+        price,
+        stock,
+        images: [image],
+        description,
+        isFeatured: true,
+        isNew: true
+      };
+      
+      try {
+        if (id) {
+          // Edit
+          await vexoApi.fetch(`/api/v1/products/${id}`, {
+            method: 'PUT',
+            body: payload
+          });
+          VexoStore.toasts.add({ type: 'success', title: 'Device Modified', message: `${title} updated successfully.` });
+        } else {
+          // Create
+          await vexoApi.fetch('/api/v1/products', {
+            method: 'POST',
+            body: payload
+          });
+          VexoStore.toasts.add({ type: 'success', title: 'Device Created', message: `${title} added to registry.` });
+        }
+        
+        this.closeModal();
+        this.fetchProducts();
+        
+      } catch (err) {
+        VexoStore.toasts.add({ type: 'error', title: 'Inventory Registry Error', message: err.message });
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Device to Index';
+      }
+    },
+    
+    async handleDelete(id) {
+      if (!confirm('Are you sure you want to delete this hardware device from the inventory index?')) return;
+      
+      try {
+        await vexoApi.fetch(`/api/v1/products/${id}`, {
+          method: 'DELETE'
+        });
+        VexoStore.toasts.add({ type: 'success', title: 'Device Deleted', message: 'Hardware removed from catalog.' });
+        this.fetchProducts();
+      } catch (err) {
+        VexoStore.toasts.add({ type: 'error', title: 'Delete Failed', message: err.message });
+      }
+    }
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.adminProducts.init();
+  });
+</script>
+{% endblock %}

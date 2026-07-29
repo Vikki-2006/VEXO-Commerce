@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Categories Catalog | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="max-w-[1700px] mx-auto px-4 sm:px-8 space-y-8">
+  <div class="border-b border-custom pb-6">
+    <span class="text-[10px] font-extrabold text-gold uppercase tracking-[0.2em] block mb-1">CLASSIFICATIONS</span>
+    <h1 class="text-3xl font-serif font-black text-custom-ink">Hardware Categories</h1>
+    <p class="text-xs text-custom-stone mt-1">Structured product series engineered for studio acoustics and visual mastering.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for cat in categories %}
+    <a href="/shop?category={{ cat.slug }}" class="group studio-card p-8 border-custom relative overflow-hidden flex flex-col justify-between h-80">
+      {% if cat.image %}
+      <img src="{{ cat.image }}" alt="{{ cat.name }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-500">
+      {% endif %}
+      <div class="relative z-10 space-y-3">
+        <span class="badge badge-gold">{{ cat._count.products if cat._count else 0 }} Active Devices</span>
+        <h2 class="text-2xl font-bold font-serif text-custom-ink group-hover:text-gold transition-colors">{{ cat.name }}</h2>
+        <p class="text-xs text-custom-stone leading-relaxed">{{ cat.description }}</p>
+      </div>
+      <div class="relative z-10 flex items-center text-xs font-bold text-gold gap-2 group-hover:translate-x-2 transition-transform">
+        Explore Hardware Series <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

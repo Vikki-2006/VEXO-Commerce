@@ -1,1 +1,0 @@
-# VEXO FastAPI Backend Engine

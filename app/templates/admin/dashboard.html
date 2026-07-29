@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Executive Telemetry | VEXO Command Center{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="pt-28 pb-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 min-h-screen text-ink theme-transition">
+  <!-- Admin Header -->
+  <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-1">EXECUTIVE TELEMETRY</span>
+      <h1 class="text-3xl font-black text-ink tracking-tight font-serif flex items-center gap-2">
+        VEXO Command Center <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">ADMIN</span>
+      </h1>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="/admin/products" class="btn-matte btn-primary py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+        <i data-lucide="plus" class="w-4 h-4 text-gold"></i> Manage Devices
+      </a>
+      <a href="/admin/orders" class="btn-matte btn-secondary py-2.5 px-4 text-xs font-bold cursor-pointer">
+        Manage Dispatches
+      </a>
+    </div>
+  </div>
+
+  <div id="admin-dashboard-loading" class="text-center py-20">
+    <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+    <p class="text-xs text-stone mt-3 font-bold">Loading VEXO Systems telemetry...</p>
+  </div>
+
+  <div id="admin-dashboard-content" class="space-y-8 hidden">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="studio-card rounded-xl p-6 bg-card border border-sand">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-extrabold text-stone uppercase tracking-wider">Gross Revenue</span>
+          <div class="p-2 rounded-lg bg-warm border border-sand text-emerald-500"><i data-lucide="dollar-sign" class="w-4 h-4"></i></div>
+        </div>
+        <div class="text-2xl font-black text-ink" id="kpi-revenue">₹0</div>
+        <span class="text-[11px] text-emerald-500 font-bold mt-1 block flex items-center gap-1">
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> +24.8% vs last mo
+        </span>
+      </div>
+
+      <div class="studio-card rounded-xl p-6 bg-card border border-sand">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-extrabold text-stone uppercase tracking-wider">Dispatches</span>
+          <div class="p-2 rounded-lg bg-warm border border-sand text-ink"><i data-lucide="shopping-bag" class="w-4 h-4"></i></div>
+        </div>
+        <div class="text-2xl font-black text-ink" id="kpi-orders">0</div>
+        <span class="text-[11px] text-emerald-500 font-bold mt-1 block flex items-center gap-1">
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> +18.2% vs last mo
+        </span>
+      </div>
+
+      <div class="studio-card rounded-xl p-6 bg-card border border-sand">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-extrabold text-stone uppercase tracking-wider">Registered Users</span>
+          <div class="p-2 rounded-lg bg-warm border border-sand text-stone"><i data-lucide="users" class="w-4 h-4"></i></div>
+        </div>
+        <div class="text-2xl font-black text-ink" id="kpi-users">0</div>
+        <span class="text-[11px] text-emerald-500 font-bold mt-1 block flex items-center gap-1">
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> +12.5% vs last mo
+        </span>
+      </div>
+
+      <div class="studio-card rounded-xl p-6 bg-card border border-sand">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] font-extrabold text-stone uppercase tracking-wider">Conversion Rate</span>
+          <div class="p-2 rounded-lg bg-warm border border-sand text-gold"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
+        </div>
+        <div class="text-2xl font-black text-ink" id="kpi-conversion">0%</div>
+        <span class="text-[11px] text-emerald-500 font-bold mt-1 block flex items-center gap-1">
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> +0.6% vs last mo
+        </span>
+      </div>
+    </div>
+
+    <!-- Revenue Analytics Chart -->
+    <div class="studio-card rounded-2xl p-6 sm:p-8 border border-sand bg-card">
+      <h3 class="text-base font-bold text-ink mb-6 uppercase tracking-wider">Revenue Performance (2026 Telemetry)</h3>
+      <div class="h-80 w-full relative">
+        <canvas id="revenue-area-chart" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Performing Devices -->
+    <div class="studio-card rounded-2xl p-6 border border-sand bg-card">
+      <h3 class="text-base font-bold text-ink mb-4 uppercase tracking-wider">Top Performing Hardware</h3>
+      <div id="top-products-container" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.adminDashboard = {
+    async init() {
+      // Admin Gate
+      if (!VexoStore.auth.isAuthenticated() || !VexoStore.auth.isAdmin()) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Admin Telemetry Restricted',
+          message: 'Access credentials required for VEXO Command Center.'
+        });
+        setTimeout(() => window.location.href = '/auth?redirect=/admin', 1000);
+        return;
+      }
+      
+      try {
+        const data = await vexoApi.fetch('/api/v1/admin/metrics');
+        
+        // Hide loader & show dashboard
+        document.getElementById('admin-dashboard-loading').classList.add('hidden');
+        document.getElementById('admin-dashboard-content').classList.remove('hidden');
+        
+        // Load KPIs
+        const m = data.metrics;
+        document.getElementById('kpi-revenue').textContent = VexoStore.formatCurrency(m.totalRevenue);
+        document.getElementById('kpi-orders').textContent = m.totalOrders;
+        document.getElementById('kpi-users').textContent = m.totalUsers;
+        document.getElementById('kpi-conversion').textContent = m.conversionRate;
+        
+        // Load Top Products
+        const topList = document.getElementById('top-products-container');
+        topList.innerHTML = data.topProducts.map(p => `
+          <div class="flex items-center justify-between p-3.5 rounded-xl bg-warm border border-sand text-xs">
+            <div>
+              <h4 class="font-bold text-ink font-serif">${p.title}</h4>
+              <span class="text-stone font-semibold">Rating: ★ ${p.rating}</span>
+            </div>
+            <div class="text-right">
+              <span class="font-bold text-ink block">${VexoStore.formatCurrency(p.price)}</span>
+              <span class="text-emerald-500 font-bold">${p.stock} in stock</span>
+            </div>
+          </div>
+        `).join('');
+        
+        // Render Chart using ChartJS with area gradient fill
+        const ctx = document.getElementById('revenue-area-chart').getContext('2d');
+        const isDark = document.documentElement.classList.contains('dark');
+        const goldColor = isDark ? '#D4AF37' : '#C5A059';
+        const gridColor = isDark ? '#282624' : '#E5E2DC';
+        const textColor = isDark ? '#A3A09A' : '#64625E';
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, isDark ? 'rgba(212, 175, 55, 0.35)' : 'rgba(197, 160, 89, 0.35)');
+        gradient.addColorStop(1, 'rgba(197, 160, 89, 0.00)');
+        
+        const labels = data.monthlySales.map(s => s.name);
+        const revenues = data.monthlySales.map(s => s.revenue);
+        
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Gross Revenue',
+              data: revenues,
+              borderColor: goldColor,
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.4,
+              borderWidth: 2.5,
+              pointBackgroundColor: goldColor,
+              pointBorderColor: isDark ? '#161514' : '#FFFFFF',
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: isDark ? '#1F1E1C' : '#FFFFFF',
+                borderColor: gridColor,
+                borderWidth: 1,
+                titleColor: isDark ? '#F5F3EF' : '#0F0E0D',
+                bodyColor: isDark ? '#A3A09A' : '#64625E',
+                displayColors: false,
+                callbacks: {
+                  label: context => `Gross Revenue: ${VexoStore.formatCurrency(context.raw)}`
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: textColor, font: { size: 10 } }
+              },
+              y: {
+                grid: { color: gridColor },
+                ticks: {
+                  color: textColor,
+                  font: { size: 10 },
+                  callback: v => '₹' + (v / 1000) + 'k'
+                }
+              }
+            }
+          }
+        });
+        
+      } catch (err) {
+        VexoStore.toasts.add({ type: 'error', title: 'Telemetry Data Failure', message: err.message });
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.adminDashboard.init();
+  });
+</script>
+{% endblock %}

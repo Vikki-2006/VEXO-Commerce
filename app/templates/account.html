@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Account & Logistics | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="pt-28 pb-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 min-h-screen text-ink theme-transition">
+  <!-- Overview Header -->
+  <div class="studio-card rounded-2xl p-6 sm:p-8 border border-sand bg-card mb-8 flex flex-col sm:flex-row items-center gap-6">
+    <img id="acc-avatar" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200" alt="" class="w-20 h-20 rounded-full object-cover border-2 border-sand">
+    <div class="text-center sm:text-left flex-1">
+      <h1 id="acc-name" class="text-2xl sm:text-3xl font-black text-ink font-serif">Astrid Lindqvist</h1>
+      <p id="acc-email" class="text-xs text-stone mt-0.5 font-semibold">user@vexo.systems</p>
+      <div class="flex items-center justify-center sm:justify-start gap-2 mt-3">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">VEXO PRO MEMBER</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">2-YEAR WARRANTY ACTIVE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- Navigation Sidebar -->
+    <div class="lg:col-span-3 studio-card rounded-2xl p-3 border border-sand bg-card space-y-1">
+      <button onclick="VexoStore.account.setTab('orders')" id="acc-tab-btn-orders" class="acc-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-colors bg-warm text-ink border border-sand">
+        <i data-lucide="package" class="w-4 h-4 text-ink"></i>
+        <span>Dispatch History</span>
+      </button>
+      <button onclick="VexoStore.account.setTab('wishlist')" id="acc-tab-btn-wishlist" class="acc-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-colors text-stone hover:text-ink hover:bg-warm/50">
+        <i data-lucide="heart" class="w-4 h-4 text-gold"></i>
+        <span>Saved Index (<span id="wishlist-count-badge">0</span>)</span>
+      </button>
+      <button onclick="VexoStore.account.setTab('addresses')" id="acc-tab-btn-addresses" class="acc-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-colors text-stone hover:text-ink hover:bg-warm/50">
+        <i data-lucide="map-pin" class="w-4 h-4 text-stone"></i>
+        <span>Logistics Addresses</span>
+      </button>
+      <button onclick="VexoStore.account.setTab('profile')" id="acc-tab-btn-profile" class="acc-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-colors text-stone hover:text-ink hover:bg-warm/50">
+        <i data-lucide="settings" class="w-4 h-4 text-titanium"></i>
+        <span>Account Settings</span>
+      </button>
+    </div>
+
+    <!-- Tab Content Area -->
+    <div class="lg:col-span-9">
+      <!-- Orders Tab Content -->
+      <div id="acc-tab-content-orders" class="acc-tab-panel space-y-4">
+        <h3 class="text-xl font-black text-ink font-serif mb-4">Dispatch History</h3>
+        
+        <div id="orders-loading-indicator" class="studio-card rounded-2xl p-12 text-center text-xs text-stone font-semibold bg-card">
+          <div class="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          Retrieving order telemetry logs...
+        </div>
+        
+        <div id="orders-empty-indicator" class="studio-card rounded-2xl p-8 text-center text-xs text-stone font-semibold bg-card hidden">
+          No dispatch history recorded yet.
+        </div>
+        
+        <div id="orders-list-container" class="space-y-4">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Wishlist Tab Content -->
+      <div id="acc-tab-content-wishlist" class="acc-tab-panel hidden">
+        <h3 class="text-xl font-black text-ink font-serif mb-4">Saved Wishlist</h3>
+        
+        <div id="wishlist-empty-indicator" class="studio-card p-12 text-center border-sand bg-card space-y-4 hidden">
+          <i data-lucide="heart" class="w-12 h-12 text-stone mx-auto"></i>
+          <h3 class="text-lg font-bold text-ink">Your wishlist is empty</h3>
+          <p class="text-xs text-stone max-w-sm mx-auto">Discover handcrafted premium products and save your favorites.</p>
+          <a href="/shop" class="btn-matte btn-gold text-xs inline-block px-5 py-2.5 font-bold">Discover Hardware</a>
+        </div>
+        
+        <div id="wishlist-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Addresses Tab Content -->
+      <div id="acc-tab-content-addresses" class="acc-tab-panel hidden space-y-4">
+        <h3 class="text-xl font-black text-ink font-serif mb-4">Saved Shipping Address</h3>
+        <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-4">
+          <div class="p-4 rounded-xl bg-warm border border-sand text-xs text-stone space-y-1 font-semibold">
+            <p class="font-bold text-ink" id="addr-street">Strandvägen 45</p>
+            <p><span id="addr-city">Stockholm</span>, <span id="addr-zip">114 56</span></p>
+            <p id="addr-country">Sweden</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Tab Content -->
+      <div id="acc-tab-content-profile" class="acc-tab-panel hidden space-y-4">
+        <h3 class="text-xl font-black text-ink font-serif mb-4">Profile Settings</h3>
+        <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-4">
+          <form onsubmit="VexoStore.account.handleProfileSave(event)" class="space-y-4 max-w-md">
+            <div>
+              <label class="text-[10px] font-bold text-stone uppercase block mb-1">Full Name</label>
+              <input type="text" id="profile-name-input" required class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-stone uppercase block mb-1">Email Address</label>
+              <input type="email" id="profile-email-input" disabled class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-stone bg-warm cursor-not-allowed">
+            </div>
+            <button type="submit" class="btn-matte btn-primary px-5 py-2.5 text-xs font-bold cursor-pointer">Save Changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.account = {
+    activeTab: 'orders',
+    orders: [],
+    
+    init() {
+      if (!VexoStore.auth.isAuthenticated()) {
+        window.location.href = '/auth?redirect=/account';
+        return;
+      }
+      
+      // Update sidebar tab based on query param
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab') || 'orders';
+      this.setTab(tab);
+      
+      const user = VexoStore.auth.getUser();
+      if (user) {
+        document.getElementById('acc-name').textContent = user.name;
+        document.getElementById('acc-email').textContent = user.email;
+        if (user.avatar) {
+          document.getElementById('acc-avatar').src = user.avatar;
+        }
+        document.getElementById('profile-name-input').value = user.name;
+        document.getElementById('profile-email-input').value = user.email;
+      }
+      
+      this.fetchOrders();
+      this.updateWishlist();
+    },
+    
+    setTab(tab) {
+      this.activeTab = tab;
+      
+      document.querySelectorAll('.acc-tab-btn').forEach(btn => {
+        btn.className = 'acc-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-colors text-stone hover:text-ink hover:bg-warm/50';
+      });
+      document.querySelectorAll('.acc-tab-panel').forEach(pnl => {
+        pnl.classList.add('hidden');
+      });
+      
+      // Highlight active button
+      const activeBtn = document.getElementById(`acc-tab-btn-${tab}`);
+      if (activeBtn) {
+        let iconColor = 'text-stone';
+        if (tab === 'orders') iconColor = 'text-ink';
+        if (tab === 'wishlist') iconColor = 'text-gold';
+        if (tab === 'profile') iconColor = 'text-titanium';
+        
+        activeBtn.className = `acc-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-colors bg-warm text-ink border border-sand`;
+      }
+      
+      const content = document.getElementById(`acc-tab-content-${tab}`);
+      if (content) {
+        content.classList.remove('hidden');
+      }
+      
+      if (tab === 'wishlist') {
+        this.updateWishlist();
+      }
+    },
+    
+    async fetchOrders() {
+      const loader = document.getElementById('orders-loading-indicator');
+      const empty = document.getElementById('orders-empty-indicator');
+      const list = document.getElementById('orders-list-container');
+      
+      if (!list || !loader) return;
+      
+      try {
+        const data = await vexoApi.fetch('/api/v1/orders/my-orders');
+        this.orders = data;
+        
+        loader.classList.add('hidden');
+        
+        if (data.length === 0) {
+          if (empty) empty.classList.remove('hidden');
+          list.innerHTML = '';
+        } else {
+          if (empty) empty.classList.add('hidden');
+          list.innerHTML = data.map(ord => {
+            const dateStr = ord.createdAt ? ord.createdAt.substring(0, 10) : 'Recent';
+            const itemsHtml = ord.items.map(it => `
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-3">
+                  <img src="${it.product?.images[0]}" alt="" class="w-10 h-10 rounded-lg object-cover border border-sand shrink-0 bg-card">
+                  <div>
+                    <h5 class="font-bold text-ink">${it.product?.title || 'Hardware Device'}</h5>
+                    <span class="text-stone">Qty: ${it.quantity}</span>
+                  </div>
+                </div>
+                <span class="font-bold text-ink">${VexoStore.formatCurrency(it.price * it.quantity)}</span>
+              </div>
+            `).join('');
+            
+            const badgeVariant = ord.status === 'SHIPPED' ? 'success' : 'gold';
+            const badgeClass = badgeVariant === 'success' 
+              ? 'inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider'
+              : 'inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider';
+            
+            return `
+              <div class="studio-card rounded-2xl p-6 border border-sand bg-card space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-sand pb-4 gap-2">
+                  <div>
+                    <span class="text-[10px] text-stone font-bold uppercase block">Dispatch Reference</span>
+                    <h4 class="text-sm font-black text-ink">${ord.orderNumber}</h4>
+                    <span class="text-[10px] text-stone">${dateStr}</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="${badgeClass}">${ord.status}</span>
+                    <span class="text-base font-black text-ink">${VexoStore.formatCurrency(ord.totalAmount)}</span>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  ${itemsHtml}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        loader.classList.add('hidden');
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Telemetry Log Error',
+          message: err.message
+        });
+      }
+      if (window.lucide) window.lucide.createIcons();
+    },
+    
+    updateWishlist() {
+      const items = VexoStore.wishlist.getItems();
+      const badge = document.getElementById('wishlist-count-badge');
+      if (badge) badge.textContent = items.length;
+      
+      const grid = document.getElementById('wishlist-grid');
+      const empty = document.getElementById('wishlist-empty-indicator');
+      
+      if (!grid) return;
+      
+      if (items.length === 0) {
+        grid.innerHTML = '';
+        if (empty) empty.classList.remove('hidden');
+      } else {
+        if (empty) empty.classList.add('hidden');
+        grid.innerHTML = items.map(p => VexoStore.renderProductCardHTML(p)).join('');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    },
+    
+    async handleProfileSave(e) {
+      e.preventDefault();
+      const name = document.getElementById('profile-name-input').value.trim();
+      
+      try {
+        const user = VexoStore.auth.getUser();
+        const res = await vexoApi.fetch('/api/v1/auth/profile', {
+          method: 'PUT',
+          body: { name }
+        });
+        
+        // Update user state
+        VexoStore.auth.set(res, VexoStore.auth.getToken());
+        
+        VexoStore.toasts.add({
+          type: 'success',
+          title: 'Profile Updated',
+          message: 'Changes saved successfully.'
+        });
+        
+        // Update header & layout name
+        document.getElementById('acc-name').textContent = res.name;
+        
+      } catch (err) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Update Failed',
+          message: err.message
+        });
+      }
+    }
+  };
+  
+  // Set updateAccountUI as global bridge
+  window.updateAccountUI = () => {
+    if (VexoStore.account) {
+      VexoStore.account.updateWishlist();
+    }
+  };
+  
+  window.updateWishlistPage = () => {
+    if (VexoStore.account) {
+      VexoStore.account.updateWishlist();
+    }
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.account.init();
+  });
+</script>
+{% endblock %}

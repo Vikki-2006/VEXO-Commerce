@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication Portal | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="pt-32 pb-20 max-w-md mx-auto px-4 min-h-screen flex flex-col justify-center text-ink theme-transition">
+  <div class="studio-card rounded-xl p-8 border border-sand bg-card space-y-6 shadow-card">
+    <div class="text-center">
+      <span class="text-2xl font-black tracking-[0.15em] text-ink font-serif uppercase block">VEXO</span>
+      <span class="text-[9px] font-bold tracking-[0.2em] text-stone uppercase block -mt-1 mb-4">SYSTEMS PORTAL</span>
+      <h2 id="auth-title" class="text-xl font-bold text-ink font-serif">Sign In to VEXO Index</h2>
+      <p id="auth-subtitle" class="text-xs text-stone mt-1 font-semibold">Access private hardware telemetry and orders</p>
+    </div>
+
+    <form id="auth-form" onsubmit="VexoStore.authPage.handleSubmit(event)" class="space-y-4">
+      <div id="register-name-block" class="hidden">
+        <label class="text-[10px] font-bold text-stone uppercase block mb-1">Full Name</label>
+        <div class="relative">
+          <input type="text" id="auth-name" placeholder="e.g. Astrid Lindqvist" class="minimal-input w-full px-4 py-2.5 pl-9 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+          <i data-lucide="user" class="w-4 h-4 text-stone absolute left-3 top-3"></i>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-stone uppercase block mb-1">Email Address</label>
+        <div class="relative">
+          <input type="email" id="auth-email" required placeholder="user@vexo.systems" class="minimal-input w-full px-4 py-2.5 pl-9 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+          <i data-lucide="mail" class="w-4 h-4 text-stone absolute left-3 top-3"></i>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-stone uppercase block mb-1">Password</label>
+        <div class="relative">
+          <input type="password" id="auth-password" required placeholder="••••••••" class="minimal-input w-full px-4 py-2.5 pl-9 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+          <i data-lucide="lock" class="w-4 h-4 text-stone absolute left-3 top-3"></i>
+        </div>
+      </div>
+
+      <button type="submit" id="auth-submit-btn" class="btn-matte btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
+        Sign In
+      </button>
+    </form>
+
+    <!-- One-Click Demo Access -->
+    <div class="pt-4 border-t border-sand space-y-2">
+      <span class="text-[10px] font-bold text-stone uppercase block text-center mb-2">One-Click Demo Access</span>
+      <div class="flex gap-2">
+        <button onclick="VexoStore.authPage.loginAsDemo('USER')" class="flex-1 py-2 px-3 rounded-lg bg-warm border border-sand text-xs font-bold text-ink hover:border-ink transition-all cursor-pointer">
+          Demo Customer
+        </button>
+        <button onclick="VexoStore.authPage.loginAsDemo('ADMIN')" class="flex-1 py-2 px-3 rounded-lg bg-ink text-white text-xs font-bold hover:bg-titanium transition-all flex items-center justify-center gap-1 cursor-pointer">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-gold"></i> Demo Admin
+        </button>
+      </div>
+    </div>
+
+    <div class="text-center pt-2">
+      <button onclick="VexoStore.authPage.toggleMode()" id="auth-toggle-btn" class="text-xs text-gold hover:underline font-bold uppercase tracking-wider cursor-pointer">
+        Don't have an account? Create one
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.authPage = {
+    isRegister: false,
+    
+    init() {
+      // Check if already authenticated
+      if (VexoStore.auth.isAuthenticated()) {
+        window.location.href = '/account';
+      }
+    },
+    
+    toggleMode() {
+      this.isRegister = !this.isRegister;
+      
+      const title = document.getElementById('auth-title');
+      const subtitle = document.getElementById('auth-subtitle');
+      const nameBlock = document.getElementById('register-name-block');
+      const nameInput = document.getElementById('auth-name');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const toggleBtn = document.getElementById('auth-toggle-btn');
+      
+      if (this.isRegister) {
+        title.textContent = 'Create VEXO Account';
+        subtitle.textContent = 'Register for private hardware telemetry & index';
+        nameBlock.classList.remove('hidden');
+        nameInput.required = true;
+        submitBtn.textContent = 'Create Account';
+        toggleBtn.textContent = 'Already registered? Sign In';
+      } else {
+        title.textContent = 'Sign In to VEXO Index';
+        subtitle.textContent = 'Access private hardware telemetry and orders';
+        nameBlock.classList.add('hidden');
+        nameInput.required = false;
+        submitBtn.textContent = 'Sign In';
+        toggleBtn.textContent = "Don't have an account? Create one";
+      }
+    },
+    
+    async handleSubmit(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('auth-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-ivory border-t-transparent rounded-full animate-spin"></div>';
+      
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value.trim();
+      const name = document.getElementById('auth-name').value.trim();
+      
+      try {
+        let res;
+        if (this.isRegister) {
+          res = await vexoApi.fetch('/api/v1/auth/register', {
+            method: 'POST',
+            body: { name, email, password }
+          });
+          VexoStore.toasts.add({
+            type: 'success',
+            title: 'Welcome to VEXO Systems',
+            message: 'Your cryptographic account has been generated.'
+          });
+        } else {
+          res = await vexoApi.fetch('/api/v1/auth/login', {
+            method: 'POST',
+            body: { email, password }
+          });
+          VexoStore.toasts.add({
+            type: 'success',
+            title: 'Signed In',
+            message: `Welcome back, ${res.user.name}`
+          });
+        }
+        
+        VexoStore.auth.set(res.user, res.token);
+        
+        // Redirect logic
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect') || '/account';
+        setTimeout(() => window.location.href = redirect, 1000);
+        
+      } catch (err) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Authentication Failed',
+          message: err.message
+        });
+        submitBtn.disabled = false;
+        submitBtn.textContent = this.isRegister ? 'Create Account' : 'Sign In';
+      }
+    },
+    
+    async loginAsDemo(role) {
+      const email = role === 'ADMIN' ? 'admin@vexo.systems' : 'user@vexo.systems';
+      const password = role === 'ADMIN' ? 'admin123' : 'user123';
+      
+      try {
+        const res = await vexoApi.fetch('/api/v1/auth/login', {
+          method: 'POST',
+          body: { email, password }
+        });
+        
+        VexoStore.auth.set(res.user, res.token);
+        VexoStore.toasts.add({
+          type: 'success',
+          title: 'Demo Access Activated',
+          message: `Logged in as ${res.user.role}`
+        });
+        
+        setTimeout(() => {
+          if (res.user.role === 'ADMIN') window.location.href = '/admin';
+          else window.location.href = '/account';
+        }, 1000);
+        
+      } catch (err) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Demo Login Failed',
+          message: err.message
+        });
+      }
+    }
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.authPage.init();
+  });
+</script>
+{% endblock %}

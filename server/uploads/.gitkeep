@@ -1,3 +1,0 @@
-# uploads directory — user-uploaded product images
-# This directory is intentionally empty in the repository.
-# Files placed here are served statically by FastAPI at /uploads/*

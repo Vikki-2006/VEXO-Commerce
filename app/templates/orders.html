@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders & Telemetry | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="max-w-[1700px] mx-auto px-4 sm:px-8 space-y-8">
+  <div class="border-b border-custom pb-6">
+    <span class="text-[10px] font-extrabold text-gold uppercase tracking-[0.2em] block mb-1">CLIENT HISTORY</span>
+    <h1 class="text-3xl font-serif font-black text-custom-ink">Dispatch Telemetry</h1>
+    <p class="text-xs text-custom-stone mt-1">Track live hardware shipments and dispatch history.</p>
+  </div>
+
+  <div id="orders-loading" class="text-center py-12">
+    <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+    <p class="text-xs text-custom-stone mt-3 font-bold">Fetching telemetry log...</p>
+  </div>
+
+  <div id="orders-list" class="space-y-6 hidden">
+    <!-- Injected dynamically by JS -->
+  </div>
+
+  <div id="orders-empty" class="studio-card p-12 text-center border-custom bg-custom-card space-y-4 hidden">
+    <i data-lucide="package" class="w-12 h-12 text-custom-stone mx-auto"></i>
+    <h3 class="text-lg font-bold text-custom-ink">No Dispatch Records Found</h3>
+    <p class="text-xs text-custom-stone max-w-sm mx-auto">You haven't placed any hardware orders yet.</p>
+    <a href="/shop" class="btn-matte btn-gold text-xs inline-block">Explore Hardware Index</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadUserOrders() {
+  const loading = document.getElementById('orders-loading');
+  const list = document.getElementById('orders-list');
+  const empty = document.getElementById('orders-empty');
+
+  if (!vexoAuth.isAuthenticated()) {
+    window.location.href = '/auth';
+    return;
+  }
+
+  try {
+    const orders = await vexoApi.fetch('/api/v1/orders/my-orders');
+    loading.classList.add('hidden');
+
+    if (orders.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    list.classList.remove('hidden');
+    list.innerHTML = orders.map(order => `
+      <div class="studio-card p-6 border-custom bg-custom-card space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-custom pb-4">
+          <div>
+            <span class="font-mono font-bold text-gold text-sm">${order.orderNumber}</span>
+            <span class="text-xs text-custom-stone block font-mono">Date: ${new Date(order.createdAt).toLocaleDateString()}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge badge-${order.status === 'DELIVERED' ? 'emerald' : 'gold'}">${order.status}</span>
+            <span class="font-mono text-base font-black text-custom-ink">${formatCurrency(order.totalAmount)}</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          ${order.items.map(item => `
+            <div class="flex items-center justify-between text-xs py-1">
+              <div class="flex items-center gap-3">
+                <span class="font-bold text-custom-ink">${item.product ? item.product.title : 'Hardware Item'}</span>
+                <span class="text-custom-stone font-mono">x${item.quantity}</span>
+              </div>
+              <span class="font-mono text-custom-stone">${formatCurrency(item.price * item.quantity)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    loading.innerText = 'Failed to load dispatch telemetry: ' + err.message;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadUserOrders);
+</script>
+{% endblock %}

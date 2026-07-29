@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="max-w-[1700px] mx-auto px-4 sm:px-8 space-y-8">
+  <div class="border-b border-custom pb-6">
+    <span class="text-[10px] font-extrabold text-gold uppercase tracking-[0.2em] block mb-1">CLIENT ORDER INDEX</span>
+    <h1 class="text-3xl font-serif font-black text-custom-ink">Shopping Cart</h1>
+  </div>
+
+  <div id="cart-empty-view" class="studio-card p-12 text-center border-custom bg-custom-card space-y-4 hidden">
+    <i data-lucide="shopping-bag" class="w-12 h-12 text-custom-stone mx-auto"></i>
+    <h3 class="text-lg font-bold text-custom-ink">Your Hardware Cart is Empty</h3>
+    <p class="text-xs text-custom-stone max-w-sm mx-auto">Explore our planar acoustic drivers and master displays.</p>
+    <a href="/shop" class="btn-matte btn-gold text-xs inline-block">Explore Hardware Index</a>
+  </div>
+
+  <div id="cart-content-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Cart Items List -->
+    <div class="lg:col-span-2 space-y-4" id="cart-items-container">
+      <!-- Injected dynamically by JS -->
+    </div>
+
+    <!-- Order Summary Sidebar -->
+    <div class="studio-card p-6 border-custom bg-custom-card space-y-6 h-fit">
+      <h3 class="text-xs font-extrabold uppercase tracking-widest text-gold border-b border-custom pb-3">Order Summary</h3>
+
+      <!-- Coupon Form -->
+      <form onsubmit="handleApplyCoupon(event)" class="flex gap-2">
+        <input type="text" id="coupon-code" placeholder="PROMO CODE" class="w-full p-2 text-xs font-mono uppercase bg-custom-warm border border-custom rounded-lg text-custom-ink focus:outline-none focus:border-gold">
+        <button type="submit" class="btn-matte btn-secondary py-2 px-3 text-xs">Apply</button>
+      </form>
+      <div id="coupon-message" class="text-[11px] font-bold"></div>
+
+      <!-- Financials Breakdown -->
+      <div class="space-y-3 text-xs border-t border-custom pt-4">
+        <div class="flex justify-between text-custom-stone">
+          <span>Hardware Subtotal</span>
+          <span class="font-mono text-custom-ink" id="cart-subtotal">$0.00</span>
+        </div>
+        <div class="flex justify-between text-custom-stone">
+          <span>Estimated Shipping</span>
+          <span class="font-mono text-custom-ink" id="cart-shipping">$0.00</span>
+        </div>
+        <div class="flex justify-between text-emerald-500 font-bold" id="cart-discount-row" style="display:none;">
+          <span>Promotional Discount</span>
+          <span class="font-mono" id="cart-discount">-$0.00</span>
+        </div>
+        <div class="flex justify-between text-sm font-black text-custom-ink border-t border-custom pt-3">
+          <span>Total Amount</span>
+          <span class="font-mono text-gold" id="cart-total">$0.00</span>
+        </div>
+      </div>
+
+      <a href="/checkout" class="btn-matte btn-gold w-full text-center py-3 text-xs block">
+        Proceed to Checkout <i data-lucide="arrow-right" class="w-4 h-4 inline ml-1"></i>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let activeDiscount = 0;
+
+function renderCart() {
+  const cart = vexoCart.getCart();
+  const emptyView = document.getElementById('cart-empty-view');
+  const contentView = document.getElementById('cart-content-view');
+  const itemsContainer = document.getElementById('cart-items-container');
+
+  if (cart.length === 0) {
+    emptyView.classList.remove('hidden');
+    contentView.classList.add('hidden');
+    return;
+  }
+
+  emptyView.classList.add('hidden');
+  contentView.classList.remove('hidden');
+
+  itemsContainer.innerHTML = cart.map(item => `
+    <div class="studio-card p-4 border-custom bg-custom-card flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <img src="${item.product.images ? item.product.images[0] : ''}" class="w-16 h-16 rounded-xl object-cover border border-custom bg-custom-warm" alt="${item.product.title}">
+        <div>
+          <a href="/shop/${item.product.slug}" class="font-bold text-sm text-custom-ink hover:text-gold font-serif">${item.product.title}</a>
+          <div class="text-xs text-custom-stone font-mono mt-0.5">$${item.product.price.toFixed(2)} each</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <div class="flex items-center border border-custom rounded-lg bg-custom-warm">
+          <button onclick="vexoCart.updateQuantity('${item.id}', -1); renderCart();" class="px-2 py-1 text-xs font-bold text-custom-ink">-</button>
+          <span class="px-3 text-xs font-mono font-bold text-custom-ink">${item.quantity}</span>
+          <button onclick="vexoCart.updateQuantity('${item.id}', 1); renderCart();" class="px-2 py-1 text-xs font-bold text-custom-ink">+</button>
+        </div>
+        <div class="font-mono text-sm font-bold text-gold">$${(item.product.price * item.quantity).toFixed(2)}</div>
+        <button onclick="vexoCart.removeFromCart('${item.id}'); renderCart();" class="text-red-400 hover:text-red-500 text-xs font-bold p-1">
+          ✕
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  const subtotal = vexoCart.getSubtotal();
+  const shipping = vexoCart.getShippingFee();
+  const total = Math.max(0, subtotal - activeDiscount + shipping);
+
+  document.getElementById('cart-subtotal').innerText = formatCurrency(subtotal);
+  document.getElementById('cart-shipping').innerText = shipping === 0 ? 'FREE' : formatCurrency(shipping);
+  document.getElementById('cart-total').innerText = formatCurrency(total);
+
+  if (activeDiscount > 0) {
+    document.getElementById('cart-discount-row').style.display = 'flex';
+    document.getElementById('cart-discount').innerText = '-' + formatCurrency(activeDiscount);
+  }
+}
+
+async function handleApplyCoupon(e) {
+  e.preventDefault();
+  const code = document.getElementById('coupon-code').value;
+  const msgEl = document.getElementById('coupon-message');
+  if (!code) return;
+
+  try {
+    const res = await vexoApi.fetch('/api/v1/coupons/validate', {
+      method: 'POST',
+      body: { code, cartTotal: vexoCart.getSubtotal() }
+    });
+    activeDiscount = res.discountAmount;
+    msgEl.className = 'text-[11px] font-bold text-emerald-500 mt-1';
+    msgEl.innerText = `Coupon ${res.coupon.code} applied! (-${formatCurrency(res.discountAmount)})`;
+    renderCart();
+  } catch (err) {
+    msgEl.className = 'text-[11px] font-bold text-red-400 mt-1';
+    msgEl.innerText = err.message;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', renderCart);
+</script>
+{% endblock %}

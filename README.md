@@ -1,174 +1,112 @@
-# VEXO Systems — Luxury Hardware & E-Commerce Platform
+# VEXO Systems — Python Full Stack E-Commerce Platform
 
-A production-grade luxury hardware and planar acoustics e-commerce platform built with a **React 19 + TypeScript** frontend and a **Python FastAPI** backend powered by **PostgreSQL**, **SQLAlchemy ORM**, and **Alembic** migrations.
+A 100% Python Full Stack E-Commerce Platform built with **FastAPI**, **Jinja2**, **PostgreSQL**, **SQLAlchemy 2.0**, **Alembic**, **HTML5**, **CSS3**, and **Vanilla JavaScript**.
 
 ---
 
-## 🏛️ Project Structure
+## 🏛 Architecture Overview
+
+VEXO Systems is architected as a pure Python application serving both server-rendered Jinja2 HTML templates and REST API endpoints.
 
 ```
-E-Commerce website/
-├── client/                         # React 19 + TypeScript + Vite frontend
-│   ├── src/
-│   │   ├── components/             # UI components (common, product, ui)
-│   │   ├── pages/                  # Route pages
-│   │   ├── services/api.ts         # API client (targets port 5000)
-│   │   ├── store/                  # Zustand state stores
-│   │   └── types/                  # TypeScript type definitions
-│   ├── package.json
-│   └── vite.config.ts
+project/
 │
-└── server/                         # Python FastAPI backend
-    ├── app/
-    │   ├── main.py                 # FastAPI app instance, routers, CORS, lifespan
-    │   ├── config.py               # Settings (DATABASE_URL, JWT_SECRET)
-    │   ├── database.py             # SQLAlchemy engine, SessionLocal, Base
-    │   ├── models.py               # SQLAlchemy ORM models
-    │   ├── schemas.py              # Pydantic request/response schemas
-    │   ├── seed.py                 # Database seeder (admin, products, coupons)
-    │   ├── middleware/
-    │   │   └── auth.py             # JWT utils, get_current_user, require_admin
-    │   └── routers/
-    │       ├── auth.py             # /api/v1/auth/*
-    │       ├── products.py         # /api/v1/products/*
-    │       ├── categories.py       # /api/v1/categories/*
-    │       ├── orders.py           # /api/v1/orders/*
-    │       ├── reviews.py          # /api/v1/reviews/*
-    │       ├── coupons.py          # /api/v1/coupons/*
-    │       ├── admin.py            # /api/v1/admin/*
-    │       └── telemetry.py        # /api/v1/health, /api/v1/telemetry
-    ├── alembic/                    # Alembic database migrations
-    │   ├── env.py
-    │   ├── script.py.mako
-    │   └── versions/
-    │       └── 001_initial_migration.py
-    ├── uploads/                    # Static file storage for product images
-    ├── alembic.ini                 # Alembic configuration
-    ├── main.py                     # Uvicorn entry point (port 5000)
-    ├── requirements.txt            # Python dependencies
-    ├── .env                        # Environment variables
-    └── vexo.db                     # SQLite fallback (auto-used if no PostgreSQL)
+├── app/
+│   ├── routers/       # REST API Endpoints (/api/v1/...)
+│   ├── views/         # Jinja2 Template View Controllers
+│   ├── models/        # SQLAlchemy 2.0 ORM Models
+│   ├── schemas/       # Pydantic Schemas
+│   ├── middleware/    # JWT Authentication & Telemetry Middleware
+│   ├── templates/     # Jinja2 HTML Templates
+│   ├── static/        # CSS, Vanilla JS, and Image Assets
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── images/
+│   ├── database.py    # Database Session & Fallback Configuration
+│   ├── seed.py        # Automated Database Seeding Engine
+│   └── main.py        # Main FastAPI Application Initialization
+│
+├── alembic/           # Database Migration Scripts
+├── alembic.ini        # Alembic Configuration
+├── main.py            # Application Server Entrypoint
+├── requirements.txt   # Python Dependencies
+├── README.md          # Project Documentation
+└── .env.example       # Environment Variable Template
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start Guide
 
-### Backend (FastAPI + PostgreSQL)
+### 1. Prerequisites
+- Python 3.13+ installed
+- PostgreSQL (optional — automatic SQLite fallback included for local development)
+
+### 2. Installation
+Clone the repository and set up a virtual environment:
 
 ```bash
-cd server
+python -m venv venv
 
-# Install Python dependencies
+# Windows
+venv\Scripts\activate
+
+# Linux/macOS
+source venv/bin/activate
+```
+
+Install Python dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
-# Configure environment (optional — defaults to local PostgreSQL)
-# Edit .env:  DATABASE_URL=postgresql://postgres:postgres@localhost:5432/vexo_db
+### 3. Environment Configuration
+Copy `.env.example` to `.env` and set your credentials:
 
-# Apply schema migrations to PostgreSQL
+```bash
+cp .env.example .env
+```
+
+### 4. Database Setup & Seeding
+The database tables and seed data (products, categories, demo users) are generated automatically on startup.
+
+To manage migrations via Alembic:
+
+```bash
 alembic upgrade head
+```
 
-# Seed initial data (admin, products, categories, coupons)
-python -m app.seed
+### 5. Running the Application
 
-# Start the FastAPI server on port 5000
+```bash
 python main.py
+# OR
+uvicorn app.main:app --reload --port 5000
 ```
 
-> **No PostgreSQL?** The backend automatically falls back to `vexo.db` (SQLite) — no configuration needed for local development.
-
-### Frontend (React 19 + TypeScript)
-
-```bash
-cd client
-npm install
-npm run dev     # http://localhost:5173
-```
+Open your browser at:
+- **Web Application**: `http://localhost:5000`
+- **Interactive OpenAPI Documentation**: `http://localhost:5000/docs`
 
 ---
 
-## 🔑 Default Credentials
+## 👤 Demo Access Credentials
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@vexo.systems` | `admin123` |
-| Customer | `user@vexo.systems` | `user123` |
-
-**Coupons:**
-- `VEXO20` — 20% off orders over ₹10,000
-- `LAUNCH50` — ₹2,500 off orders over ₹20,000
+| Role | Email | Password | Access |
+|------|-------|----------|--------|
+| **Administrator** | `admin@vexo.systems` | `admin123` | Full Admin Dashboard & Device Control |
+| **Customer** | `user@vexo.systems` | `user123` | Full Checkout & Dispatch Telemetry |
 
 ---
 
-## 📡 API Reference
+## 💻 Tech Stack Summary
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/` | — | Developer telemetry dashboard |
-| `GET` | `/docs` | — | Swagger interactive UI |
-| `GET` | `/redoc` | — | ReDoc API reference |
-| `GET` | `/api/v1/health` | — | Health check |
-| `GET` | `/api/v1/telemetry` | — | Memory, uptime, DB status |
-| `POST` | `/api/v1/auth/register` | — | Customer registration |
-| `POST` | `/api/v1/auth/login` | — | JWT authentication |
-| `GET` | `/api/v1/auth/profile` | Bearer | Current user profile |
-| `PUT` | `/api/v1/auth/profile` | Bearer | Update profile |
-| `POST` | `/api/v1/auth/address` | Bearer | Add shipping address |
-| `DELETE` | `/api/v1/auth/address/{id}` | Bearer | Delete address |
-| `GET` | `/api/v1/products` | — | Filterable catalog |
-| `GET` | `/api/v1/products/{slug}` | — | Product detail |
-| `POST` | `/api/v1/products` | Admin | Create product |
-| `PUT` | `/api/v1/products/{id}` | Admin | Update product |
-| `DELETE` | `/api/v1/products/{id}` | Admin | Delete product |
-| `GET` | `/api/v1/categories` | — | All categories |
-| `POST` | `/api/v1/categories` | Admin | Create category |
-| `PUT` | `/api/v1/categories/{id}` | Admin | Update category |
-| `DELETE` | `/api/v1/categories/{id}` | Admin | Delete category |
-| `POST` | `/api/v1/orders` | Bearer | Create order |
-| `GET` | `/api/v1/orders/my-orders` | Bearer | User order history |
-| `GET` | `/api/v1/orders/{id}` | Bearer | Order detail |
-| `GET` | `/api/v1/orders/admin/all` | Admin | All orders |
-| `PATCH` | `/api/v1/orders/admin/{id}/status` | Admin | Update order status |
-| `POST` | `/api/v1/reviews` | Bearer | Post review |
-| `GET` | `/api/v1/reviews/product/{id}` | — | Product reviews |
-| `POST` | `/api/v1/coupons/validate` | — | Validate coupon |
-| `GET` | `/api/v1/coupons` | Admin | All coupons |
-| `POST` | `/api/v1/coupons` | Admin | Create coupon |
-| `DELETE` | `/api/v1/coupons/{id}` | Admin | Delete coupon |
-| `GET` | `/api/v1/admin/metrics` | Admin | Revenue & analytics |
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 19, TypeScript, Vite, TailwindCSS v4, Framer Motion, Zustand |
-| **Backend** | Python FastAPI, Uvicorn, Pydantic v2 |
-| **ORM** | SQLAlchemy 2.0 |
-| **Migrations** | Alembic |
-| **Database** | PostgreSQL (primary) / SQLite (dev fallback) |
-| **Auth** | JWT (PyJWT), bcrypt |
-| **API Docs** | Auto-generated OpenAPI 3.0 / Swagger |
-
----
-
-## 📜 Alembic Migration Commands
-
-```bash
-# Apply all pending migrations
-alembic upgrade head
-
-# Rollback last migration
-alembic downgrade -1
-
-# Auto-generate a new migration from model changes
-alembic revision --autogenerate -m "describe_change"
-
-# View migration history
-alembic history
-```
-
----
-
-© 2026 VEXO Systems. All rights reserved.
+- **Backend Framework**: FastAPI
+- **Templating Engine**: Jinja2
+- **Database ORM**: SQLAlchemy 2.0
+- **Database Migrations**: Alembic
+- **Primary Database**: PostgreSQL (SQLite fallback)
+- **Authentication**: JWT (JSON Web Tokens) with bcrypt password hashing
+- **Frontend Styling**: HTML5, CSS3, Tailwind CSS (via CDN)
+- **Frontend Scripting**: Vanilla JavaScript

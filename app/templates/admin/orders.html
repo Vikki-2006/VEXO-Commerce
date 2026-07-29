@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Fulfillment Telemetry | Command Center{% endblock %}
+
+{% block content %}
+<div class="pt-28 pb-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 min-h-screen text-ink theme-transition">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider mb-2">ADMIN DISPATCHES</span>
+    <h1 class="text-3xl font-black text-ink tracking-tight font-serif">Global Fulfillment Telemetry</h1>
+  </div>
+
+  <!-- Table Card -->
+  <div class="studio-card rounded-2xl p-6 border border-sand bg-card overflow-x-auto">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead>
+        <tr class="border-b border-sand text-stone uppercase font-extrabold text-[10px]">
+          <th class="pb-3 px-2">Dispatch Ref #</th>
+          <th class="pb-3 px-2">Customer</th>
+          <th class="pb-3 px-2">Date</th>
+          <th class="pb-3 px-2">Total Paid</th>
+          <th class="pb-3 px-2">Status</th>
+        </tr>
+      </thead>
+      <tbody id="admin-orders-table-body" class="divide-y divide-sand">
+        <tr>
+          <td colspan="5" class="py-8 text-center text-stone">
+            <div class="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            Loading fulfillment registry...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.adminOrders = {
+    orders: [],
+    
+    async init() {
+      // Admin Gate
+      if (!VexoStore.auth.isAuthenticated() || !VexoStore.auth.isAdmin()) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Authentication Restricted',
+          message: 'Admin credentials required for VEXO Command Center.'
+        });
+        setTimeout(() => window.location.href = '/auth?redirect=/admin/orders', 1000);
+        return;
+      }
+      
+      this.fetchOrders();
+    },
+    
+    async fetchOrders() {
+      try {
+        const data = await vexoApi.fetch('/api/v1/orders/all');
+        this.orders = data || [];
+        this.renderTable();
+      } catch (err) {
+        VexoStore.toasts.add({ type: 'error', title: 'Fulfillment Retrieve Error', message: err.message });
+      }
+    },
+    
+    renderTable() {
+      const tbody = document.getElementById('admin-orders-table-body');
+      if (!tbody) return;
+      
+      if (this.orders.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-8 text-center text-stone font-semibold">No dispatch telemetry records found.</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = this.orders.map(ord => {
+        const dateStr = ord.createdAt ? ord.createdAt.substring(0, 10) : 'Recent';
+        const customerName = ord.user ? ord.user.name : 'Unknown Customer';
+        const customerEmail = ord.user ? ord.user.email : '';
+        
+        return `
+          <tr class="hover:bg-warm transition-colors">
+            <td class="py-3.5 px-2 font-bold text-ink">${ord.orderNumber}</td>
+            <td class="py-3.5 px-2">
+              <span class="block font-bold text-ink font-serif">${customerName}</span>
+              <span class="text-stone text-[10px] font-semibold">${customerEmail}</span>
+            </td>
+            <td class="py-3.5 px-2 text-stone font-semibold">${dateStr}</td>
+            <td class="py-3.5 px-2 font-black text-ink">${VexoStore.formatCurrency(ord.totalAmount)}</td>
+            <td class="py-3.5 px-2">
+              <select onchange="VexoStore.adminOrders.updateStatus('${ord.id}', this.value)" class="minimal-input text-[10px] font-extrabold py-1.5 px-3 rounded-lg border-sand bg-card text-ink focus:outline-none">
+                <option value="PROCESSING" ${ord.status === 'PROCESSING' ? 'selected' : ''}>PROCESSING</option>
+                <option value="SHIPPED" ${ord.status === 'SHIPPED' ? 'selected' : ''}>SHIPPED</option>
+                <option value="DELIVERED" ${ord.status === 'DELIVERED' ? 'selected' : ''}>DELIVERED</option>
+                <option value="CANCELLED" ${ord.status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    },
+    
+    async updateStatus(orderId, status) {
+      try {
+        await vexoApi.fetch(`/api/v1/orders/admin/${orderId}/status`, {
+          method: 'PATCH',
+          body: { status }
+        });
+        
+        VexoStore.toasts.add({
+          type: 'success',
+          title: 'Dispatch Status Updated',
+          message: `Order status set to ${status}.`
+        });
+        
+        this.fetchOrders();
+        
+      } catch (err) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Status Update Failed',
+          message: err.message
+        });
+      }
+    }
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.adminOrders.init();
+  });
+</script>
+{% endblock %}

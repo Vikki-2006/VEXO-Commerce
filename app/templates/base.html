@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>{% block title %}VEXO Systems | Industrial Technology & Acoustic Hardware{% endblock %}</title>
+  <meta name="description" content="{% block description %}Handcrafted industrial technology, planar magnetic transducers, QD-OLED master displays, and CNC milled aluminum keydecks engineered in Stockholm.{% endblock %}">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+
+  <!-- Fonts matching index.css -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Compiled Tailwind CSS matching index-GAjra5-2.css -->
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <script>
+    (function() {
+      const saved = localStorage.getItem('vexo_theme');
+      if (saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
+  <!-- Lucide Icons script -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Root container layout matching App.tsx -->
+  <div class="flex flex-col min-h-screen bg-ivory text-ink selection:bg-gold selection:text-white theme-transition">
+    
+    <!-- Scroll Progress Bar -->
+    <div class="fixed top-0 left-0 right-0 h-[2.5px] z-50 pointer-events-none bg-transparent">
+      <div id="scroll-progress" class="h-full bg-gold transition-all duration-150 ease-out" style="width: 0%;"></div>
+    </div>
+
+    <!-- Header matching Header.tsx -->
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-transparent py-6">
+      <div class="max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12">
+        <div class="flex items-center justify-between">
+          <!-- Brand Logo -->
+          <a href="/" class="flex items-center gap-3 group">
+            <div class="flex flex-col">
+              <span class="text-2xl font-black tracking-[0.15em] text-ink font-serif uppercase">VEXO</span>
+              <span class="text-[9px] font-bold tracking-[0.25em] text-stone uppercase -mt-1">SYSTEMS • EST. 2026</span>
+            </div>
+          </a>
+
+          <!-- Desktop Navigation Links -->
+          <nav class="hidden md:flex items-center gap-1 bg-card border border-sand rounded-full px-5 py-1.5 shadow-subtle">
+            <a href="/" id="nav-link-index" class="relative px-4 py-1 text-xs font-extrabold tracking-wider transition-colors text-stone hover:text-ink">
+              <div class="nav-active-bg absolute inset-0 bg-warm rounded-full hidden"></div>
+              <span class="relative z-10">INDEX</span>
+            </a>
+            <a href="/shop" id="nav-link-catalog" class="relative px-4 py-1 text-xs font-extrabold tracking-wider transition-colors text-stone hover:text-ink">
+              <div class="nav-active-bg absolute inset-0 bg-warm rounded-full hidden"></div>
+              <span class="relative z-10">CATALOGUE</span>
+            </a>
+            <a href="/shop?view=categories" id="nav-link-categories" class="relative px-4 py-1 text-xs font-extrabold tracking-wider transition-colors text-stone hover:text-ink">
+              <div class="nav-active-bg absolute inset-0 bg-warm rounded-full hidden"></div>
+              <span class="relative z-10">CATEGORIES</span>
+            </a>
+          </nav>
+
+          <!-- Right Actions -->
+          <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Theme Toggler -->
+            <button onclick="toggleTheme()" class="relative p-2 rounded-full bg-card border border-sand text-stone hover:text-ink hover:border-ink transition-all shadow-subtle flex items-center justify-center cursor-pointer" title="Switch theme mode" aria-label="Toggle theme mode">
+              <i data-lucide="moon" id="theme-icon-moon" class="w-4 h-4 text-stone"></i>
+              <i data-lucide="sun" id="theme-icon-sun" class="w-4 h-4 text-gold fill-gold/20 hidden"></i>
+            </button>
+
+            <!-- Command Palette Trigger -->
+            <button onclick="openCommandPalette()" class="flex items-center gap-2 px-3.5 py-2 rounded-full bg-card border border-sand text-ink hover:border-ink transition-all text-xs font-semibold shadow-subtle cursor-pointer" title="Search catalog (Ctrl+K)" aria-label="Search catalog">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-stone shrink-0"></i>
+              <span class="hidden sm:inline text-[11px] font-extrabold uppercase tracking-wider text-ink">Search</span>
+              <kbd class="hidden lg:inline-block px-1.5 py-0.5 text-[9px] font-mono bg-warm rounded border border-sand text-stone font-bold">⌘K</kbd>
+            </button>
+
+            <!-- Compare Badge -->
+            <a href="/compare" id="nav-compare-btn" class="relative p-2 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors hidden" title="Compare Matrix">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 text-gold"></i>
+              <span id="nav-compare-count" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold text-white text-[9px] font-bold flex items-center justify-center">0</span>
+            </a>
+
+            <!-- Wishlist Button -->
+            <a href="/account?tab=wishlist" class="relative p-2 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors" title="Wishlist">
+              <i data-lucide="heart" class="w-4 h-4"></i>
+              <span id="nav-wishlist-count" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-ink text-ivory text-[9px] font-bold flex items-center justify-center hidden">0</span>
+            </a>
+
+            <!-- Cart Drawer Button -->
+            <button onclick="toggleCart()" class="relative px-4 py-2 rounded-full bg-ink text-ivory hover:bg-titanium transition-all shadow-subtle flex items-center gap-2 text-xs font-black uppercase tracking-wider cursor-pointer" title="Open Shopping Bag">
+              <i data-lucide="shopping-bag" class="w-4 h-4 text-gold shrink-0"></i>
+              <span class="hidden sm:inline text-ivory font-extrabold">Bag</span>
+              <span id="nav-cart-count-badge" class="w-4 h-4 rounded-full bg-gold text-white font-extrabold text-[10px] flex items-center justify-center ml-0.5 hidden">0</span>
+              <span id="nav-cart-empty-badge" class="text-[11px] text-gold font-mono font-bold">(0)</span>
+            </button>
+
+            <!-- User Auth Profile Dropdown -->
+            <div class="relative inline-block text-left">
+              <div id="user-nav-auth">
+                <a href="/auth" class="p-2 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors block">
+                  <i data-lucide="user" class="w-4 h-4 text-ink"></i>
+                </a>
+              </div>
+              <div id="user-dropdown-menu" class="absolute right-0 mt-3 w-56 bg-card border border-sand rounded-xl p-2 shadow-modal z-50 text-ink hidden transform opacity-0 scale-95 transition-all duration-200">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+
+            <!-- Mobile Drawer Menu Toggle -->
+            <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-stone hover:text-ink">
+              <i data-lucide="menu" id="mobile-menu-icon-open" class="w-5 h-5 text-ink"></i>
+              <i data-lucide="x" id="mobile-menu-icon-close" class="w-5 h-5 text-ink hidden"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Drawer Menu -->
+      <div id="mobile-menu-drawer" class="md:hidden border-t border-sand bg-ivory/98 backdrop-blur-xl overflow-hidden px-6 py-0 max-h-0 opacity-0 transition-all duration-300 ease-out">
+        <div class="flex flex-col gap-4 py-6">
+          <a href="/" class="text-base font-black text-ink hover:text-gold py-1 uppercase tracking-wider">INDEX</a>
+          <a href="/shop" class="text-base font-black text-ink hover:text-gold py-1 uppercase tracking-wider">CATALOGUE</a>
+          <a href="/shop?view=categories" class="text-base font-black text-ink hover:text-gold py-1 uppercase tracking-wider">CATEGORIES</a>
+          <a href="/admin" id="mobile-nav-admin-link" class="text-base font-black text-gold py-1 flex items-center gap-2 uppercase tracking-wider hidden">
+            <i data-lucide="shield-check" class="w-5 h-5"></i> Admin Panel
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow pt-24">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer matching Footer.tsx -->
+    <footer class="relative bg-warm border-t border-sand pt-20 pb-12 overflow-hidden mt-32 text-ink transition-colors duration-500">
+      <div class="max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
+        
+        <!-- Top Newsletter Card -->
+        <div class="bg-card rounded-2xl p-8 sm:p-12 mb-16 border border-sand shadow-subtle">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-7">
+              <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-2">VEXO SYSTEMS DISPATCH</span>
+              <h3 class="text-2xl sm:text-3xl font-black text-ink tracking-tight font-serif">Join the Hardware Catalogue Journal</h3>
+              <p class="text-stone text-xs mt-2 max-w-xl leading-relaxed">
+                Receive private dispatches on limited hardware iterations, acoustic engineering papers, and architectural releases.
+              </p>
+            </div>
+
+            <div class="lg:col-span-5">
+              <div id="footer-newsletter-subscribed" class="flex items-center gap-3 p-4 rounded-xl bg-success/10 border border-success/20 text-success hidden">
+                <i data-lucide="check-circle-2" class="w-5 h-5 shrink-0 text-emerald-500"></i>
+                <div>
+                  <h4 class="text-xs font-bold">Registration Confirmed</h4>
+                  <p class="text-[11px] text-success/80">Welcome to VEXO Systems Private Index.</p>
+                </div>
+              </div>
+              <form id="footer-newsletter-form" onsubmit="event.preventDefault(); document.getElementById('footer-newsletter-form').classList.add('hidden'); document.getElementById('footer-newsletter-subscribed').classList.remove('hidden'); VexoStore.toasts.add({type:'success', title:'Subscribed', message:'Welcome to VEXO telemetry.'});" class="flex flex-col sm:flex-row gap-2">
+                <input type="email" placeholder="enter@your-email.com" required class="minimal-input flex-1 text-xs py-2 px-3.5 rounded-lg focus:outline-none">
+                <button type="submit" class="btn-matte btn-primary py-2.5 px-5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">
+                  Subscribe <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Columns -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
+          <div class="col-span-2 space-y-4">
+            <a href="/" class="flex flex-col">
+              <span class="text-2xl font-black tracking-[0.15em] text-ink font-serif uppercase">VEXO</span>
+              <span class="text-[9px] font-bold tracking-[0.25em] text-stone uppercase -mt-1">SYSTEMS • EST. 2026</span>
+            </a>
+            <p class="text-stone text-xs leading-relaxed max-w-sm">
+              Handcrafted industrial technology, planar acoustic systems, and optical displays designed in Stockholm and engineered for international technologists.
+            </p>
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-sand text-[10px] font-bold text-stone uppercase tracking-wider">
+              <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+              SYSTEM TELEMETRY • 100% OPERATIONAL
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-ink uppercase tracking-[0.2em] mb-4">Hardware</h4>
+            <ul class="space-y-2.5 text-xs font-semibold text-stone">
+              <li><a href="/shop?category=acoustic-architecture" class="hover:text-ink transition-colors">Planar Acoustics</a></li>
+              <li><a href="/shop?category=visual-displays" class="hover:text-ink transition-colors">4K Master Displays</a></li>
+              <li><a href="/shop?category=tactile-inputs" class="hover:text-ink transition-colors">Haptic Keydecks</a></li>
+              <li><a href="/shop?category=carry-apparel" class="hover:text-ink transition-colors">Field Pack Carry</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-ink uppercase tracking-[0.2em] mb-4">Platform</h4>
+            <ul class="space-y-2.5 text-xs font-semibold text-stone">
+              <li><a href="/shop" class="hover:text-ink transition-colors">Full Index</a></li>
+              <li><a href="/compare" class="hover:text-ink transition-colors">Spec Matrix</a></li>
+              <li><a href="/account" class="hover:text-ink transition-colors">Dispatch Tracking</a></li>
+              <li><a href="/account?tab=addresses" class="hover:text-ink transition-colors">Global Logistics</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-extrabold text-ink uppercase tracking-[0.2em] mb-4">Systems</h4>
+            <ul class="space-y-2.5 text-xs font-semibold text-stone">
+              <li><a href="#" class="hover:text-ink transition-colors">Manifesto</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors">Dieter Rams Legacy</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors">Material Ethics</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors">Press Archives</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="pt-8 border-t border-sand flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone font-semibold">
+          <p>© 2026 VEXO Systems AB. All Rights Reserved.</p>
+          <div class="flex items-center gap-6 text-[11px]">
+            <a href="#" class="hover:text-ink transition-colors">Privacy Policy</a>
+            <a href="#" class="hover:text-ink transition-colors">Terms of Dispatch</a>
+            <a href="#" class="hover:text-ink transition-colors">Security</a>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href="#" class="p-2 rounded-full bg-card border border-sand hover:text-ink transition-colors" title="Global Network"><i data-lucide="globe" class="w-3.5 h-3.5"></i></a>
+            <a href="#" class="p-2 rounded-full bg-card border border-sand hover:text-ink transition-colors" title="Community"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></a>
+            <a href="#" class="p-2 rounded-full bg-card border border-sand hover:text-ink transition-colors" title="Share"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Global Cart Drawer overlay matching CartDrawer.tsx -->
+    <div id="cart-drawer-overlay" class="fixed inset-0 z-50 flex justify-end hidden pointer-events-none">
+      <div id="cart-drawer-backdrop" onclick="toggleCart()" class="fixed inset-0 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300 pointer-events-auto"></div>
+      <div id="cart-drawer-panel" class="relative w-full max-w-md bg-card border-l border-sand h-full shadow-modal flex flex-col z-10 text-ink theme-transition translate-x-full transition-transform duration-300 ease-out pointer-events-auto">
+        
+        <div class="flex items-center justify-between p-6 border-b border-sand">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-warm text-ink border border-sand">
+              <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-black text-ink tracking-tight uppercase">Shopping Bag</h3>
+              <p id="cart-items-count-text" class="text-[11px] text-stone font-semibold">0 unique items</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="cart-clear-btn" onclick="clearCart()" class="text-xs font-bold text-stone hover:text-rose-500 transition-colors px-2 py-1 hidden" title="Clear entire cart">Clear</button>
+            <button onclick="toggleCart()" class="p-2 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors" aria-label="Close cart">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="px-6 py-3.5 bg-warm border-b border-sand">
+          <div class="flex items-center justify-between text-xs font-bold text-stone mb-1.5">
+            <span class="flex items-center gap-1.5 text-ink">
+              <i data-lucide="truck" class="w-4 h-4 text-gold"></i>
+              <span id="shipping-progress-text">Add <strong id="shipping-progress-needed">₹15,000</strong> for Free Express Shipping</span>
+            </span>
+            <span id="shipping-progress-percent" class="text-[10px]">0%</span>
+          </div>
+          <div class="w-full h-1.5 rounded-full bg-sand overflow-hidden">
+            <div id="shipping-progress-bar" class="h-full bg-gold transition-all duration-500 rounded-full" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div id="cart-items-list" class="flex-1 overflow-y-auto p-6 space-y-4">
+          <!-- Rendered in JS -->
+        </div>
+
+        <div id="cart-summary-footer" class="p-6 border-t border-sand bg-warm space-y-4 hidden">
+          <div id="cart-coupon-block">
+            <!-- Applied coupon or Input code -->
+          </div>
+          <div class="space-y-1.5 text-xs font-semibold text-stone">
+            <div class="flex justify-between">
+              <span>Subtotal</span>
+              <span id="cart-summary-subtotal" class="text-ink font-bold">₹0</span>
+            </div>
+            <div id="cart-summary-discount-row" class="flex justify-between text-amber-500 hidden">
+              <span>Discount</span>
+              <span id="cart-summary-discount">-₹0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Estimated Tax (8%)</span>
+              <span id="cart-summary-tax" class="text-ink font-bold">₹0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Shipping Fee</span>
+              <span id="cart-summary-shipping" class="text-ink font-bold">₹1,500</span>
+            </div>
+            <div class="flex justify-between text-base font-black text-ink pt-2 border-t border-sand">
+              <span>Grand Total</span>
+              <span id="cart-summary-total" class="text-gold">₹0</span>
+            </div>
+          </div>
+          <button onclick="proceedToCheckout()" class="btn-matte btn-primary w-full py-3 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+            Proceed to Checkout <i data-lucide="arrow-right" class="w-4 h-4 text-gold shrink-0"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Compare Modal matrix matching CompareDrawer.tsx -->
+    <div id="compare-drawer-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
+      <div id="compare-drawer-backdrop" onclick="VexoStore.compareDrawer.close()" class="fixed inset-0 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+      <div id="compare-drawer-box" class="relative w-full max-w-4xl bg-card border border-sand rounded-2xl p-6 sm:p-8 shadow-modal z-10 my-auto overflow-hidden text-ink theme-transition opacity-0 scale-95 transition-all duration-300">
+        <div class="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-xl font-bold tracking-tight text-ink font-serif">Side-by-Side Spec Matrix</h3>
+          </div>
+          <button onclick="VexoStore.compareDrawer.close()" class="p-1.5 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="space-y-6">
+          <div class="flex items-center justify-between text-xs">
+            <p id="compare-benchmarking-text" class="text-stone font-semibold">
+              Benchmarking <strong class="text-ink">0</strong> of 4 hardware devices
+            </p>
+            <button onclick="VexoStore.compare.clear()" class="font-bold text-danger hover:underline flex items-center gap-1 uppercase tracking-wider">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear All
+            </button>
+          </div>
+          <div id="compare-drawer-items" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Rendered in JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Command Palette search overlay matching CommandPalette.tsx -->
+    <div id="command-palette-overlay" class="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 sm:px-6 hidden">
+      <div id="command-palette-backdrop" onclick="closeCommandPalette()" class="fixed inset-0 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+      <div id="command-palette-box" class="relative w-full max-w-2xl bg-card border border-sand rounded-2xl shadow-modal overflow-hidden z-10 text-ink theme-transition opacity-0 scale-95 translate-y-[-10px] transition-all duration-300">
+        <div class="flex items-center gap-3 px-4 border-b border-sand h-14">
+          <i data-lucide="search" class="w-4 h-4 text-stone shrink-0"></i>
+          <input type="text" id="command-search-input" oninput="VexoStore.commandPalette.search(this.value)" onkeydown="VexoStore.commandPalette.handleKeyDown(event)" placeholder="Search the VEXO inventory matrix..." class="flex-grow bg-transparent border-0 focus:ring-0 focus:outline-none text-xs text-ink placeholder:text-zinc-500 font-semibold">
+          <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono bg-warm rounded border border-sand text-stone font-bold">ESC</kbd>
+          <button onclick="closeCommandPalette()" class="p-1 rounded hover:bg-warm text-stone hover:text-ink transition-colors">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div id="command-palette-results" class="max-h-[60vh] overflow-y-auto">
+          <!-- Rendered in JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Container matching ToastContainer.tsx -->
+    <div id="toast-notification-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0" aria-live="polite" role="region" aria-label="Notifications"></div>
+
+    <!-- Global Quick View Modal matching QuickViewModal.tsx -->
+    <div id="quickview-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
+      <div id="quickview-modal-backdrop" onclick="VexoStore.quickView.close()" class="fixed inset-0 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+      <div id="quickview-modal-box" class="relative w-full max-w-4xl bg-card border border-sand rounded-2xl p-6 sm:p-8 shadow-modal z-10 my-auto overflow-hidden text-ink theme-transition opacity-0 scale-95 transition-all duration-300">
+        <!-- Rendered in JS dynamically -->
+      </div>
+    </div>
+
+    <!-- Scroll Back To Top Button matching BackToTop.tsx -->
+    <button id="back-to-top" onclick="scrollToTop()" class="fixed bottom-6 left-6 z-40 p-3 rounded-full bg-card border border-sand text-ink shadow-modal hover:border-ink transition-all duration-300 transform scale-0 translate-y-4 opacity-0 cursor-pointer" title="Scroll back to top" aria-label="Scroll back to top">
+      <i data-lucide="arrow-up" class="w-4 h-4 text-gold"></i>
+    </button>
+
+  </div>
+
+  <!-- Global Application Scripts -->
+  <script src="/static/js/app.js?v=2"></script>
+  <script src="/static/js/cart.js"></script>
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+  </script>
+  {% block extra_js %}{% endblock %}
+
+</body>
+</html>

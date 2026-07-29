@@ -1,0 +1,618 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.title }} | VEXO Systems{% endblock %}
+{% block description %}{{ product.subtitle or product.description }}{% endblock %}
+
+{% block content %}
+<div class="pt-28 pb-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 text-ink theme-transition">
+  
+  <!-- Breadcrumb & Share -->
+  <div class="flex items-center justify-between gap-2 text-xs font-bold text-stone mb-8 uppercase tracking-wider">
+    <div class="flex items-center gap-2">
+      <a href="/" class="hover:text-ink">VEXO Index</a>
+      <span>/</span>
+      <a href="/shop" class="hover:text-ink">Catalogue</a>
+      <span>/</span>
+      <span class="text-ink">{{ product.title }}</span>
+    </div>
+
+    <button onclick="VexoStore.productDetail.share()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-sand hover:border-ink transition-colors text-ink text-[11px] font-bold cursor-pointer">
+      <i data-lucide="share-2" class="w-3.5 h-3.5 text-gold"></i> Share Product
+    </button>
+  </div>
+
+  <!-- Product Split Showcase -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-20">
+    <!-- Gallery -->
+    <div class="lg:col-span-6 space-y-4">
+      <div class="relative aspect-square 3xl:aspect-[4/3] rounded-2xl overflow-hidden studio-card border border-sand bg-warm">
+        <img id="main-product-gallery-img" src="{{ product.images[0] }}" alt="{{ product.title }}" class="w-full h-full object-cover">
+        {% if product.isNew %}
+        <div class="absolute top-4 left-4">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">NEW RELEASE</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if product.images|length > 1 %}
+      <div class="flex gap-3 overflow-x-auto pb-2">
+        {% for img in product.images %}
+        <button onclick="VexoStore.productDetail.selectImage({{ loop.index0 }}, this)" class="gallery-thumb-btn w-20 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-card {{ 'border-ink scale-95' if loop.first else 'border-sand opacity-60 hover:opacity-100' }}">
+          <img src="{{ img }}" alt="" class="w-full h-full object-cover">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Info & Buy Panel -->
+    <div class="lg:col-span-6 space-y-6">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">{{ product.category.name }}</span>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">IN STOCK ({{ product.stock }} UNITS)</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-ink tracking-tight font-serif">{{ product.title }}</h1>
+        <p class="text-xs sm:text-sm text-stone mt-1 font-semibold">{{ product.subtitle }}</p>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-3 mt-3">
+          <div class="flex items-center text-gold gap-0.5">
+            {% set rating_floor = product.rating|int %}
+            {% for i in range(5) %}
+            <i data-lucide="star" class="w-3.5 h-3.5 {{ 'fill-gold text-gold' if i < rating_floor else 'text-sand' }}"></i>
+            {% endfor %}
+          </div>
+          <span class="text-xs font-bold text-ink">{{ product.rating }}</span>
+          <span class="text-xs text-stone font-semibold">({{ product.reviewsCount }} customer reviews)</span>
+        </div>
+
+        <!-- Price -->
+        <div class="flex items-baseline gap-4 my-6">
+          <span class="text-4xl sm:text-5xl font-black text-ink">₹{{ "{:,.0f}".format(product.price) }}</span>
+          {% if product.compareAtPrice %}
+          <span class="text-lg text-stone line-through font-semibold">₹{{ "{:,.0f}".format(product.compareAtPrice) }}</span>
+          {% endif %}
+        </div>
+
+        <p class="text-xs sm:text-sm text-stone leading-relaxed font-semibold">{{ product.description }}</p>
+      </div>
+
+      <!-- Quantity Counter & Actions -->
+      <div class="space-y-4 pt-6 border-t border-sand">
+        <div class="flex items-center gap-4">
+          <span class="text-xs font-extrabold text-stone uppercase tracking-wider">Quantity</span>
+          <div class="flex items-center gap-3 bg-warm border border-sand rounded-lg px-3 py-1.5">
+            <button onclick="VexoStore.productDetail.updateQty(-1)" class="text-stone hover:text-ink cursor-pointer">
+              <i data-lucide="minus" class="w-4 h-4"></i>
+            </button>
+            <span id="product-qty-val" class="text-sm font-bold text-ink px-2">1</span>
+            <button onclick="VexoStore.productDetail.updateQty(1)" class="text-stone hover:text-ink cursor-pointer">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button onclick="VexoStore.productDetail.addToCart()" class="btn-matte btn-primary flex-1 py-3 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-gold"></i> Add to Bag
+          </button>
+
+          <button onclick="VexoStore.productDetail.buyNow()" class="btn-matte btn-secondary flex-1 py-3 text-xs font-black uppercase tracking-wider cursor-pointer">
+            Instant Checkout
+          </button>
+
+          <button id="product-wish-btn" onclick="VexoStore.productDetail.toggleWishlist()" class="p-4 rounded-lg border transition-all bg-card text-stone hover:text-ink border-sand" title="Wishlist">
+            <i data-lucide="heart" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Shipping Badges -->
+      <div class="grid grid-cols-3 gap-4 pt-6 border-t border-sand text-center">
+        <div class="p-3.5 rounded-xl bg-card border border-sand shadow-subtle">
+          <i data-lucide="truck" class="w-4 h-4 text-gold mx-auto mb-1"></i>
+          <span class="text-[10px] font-bold text-ink block uppercase">Free Dispatch</span>
+          <span class="text-[9px] text-stone font-semibold">Orders over ₹15,000</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-card border border-sand shadow-subtle">
+          <i data-lucide="shield-check" class="w-4 h-4 text-ink mx-auto mb-1"></i>
+          <span class="text-[10px] font-bold text-ink block uppercase">2-Year Warranty</span>
+          <span class="text-[9px] text-stone font-semibold">Global Replacement</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-card border border-sand shadow-subtle">
+          <i data-lucide="rotate-ccw" class="w-4 h-4 text-emerald-500 mx-auto mb-1"></i>
+          <span class="text-[10px] font-bold text-ink block uppercase">30-Day Return</span>
+          <span class="text-[9px] text-stone font-semibold">Hassle-Free Returns</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Section -->
+  <div class="studio-card rounded-2xl p-8 border border-sand bg-card mb-20">
+    <div class="flex border-b border-sand gap-8 mb-6">
+      <button onclick="VexoStore.productDetail.setTab('specs')" id="tab-btn-specs" class="tab-btn pb-3 text-xs font-extrabold uppercase tracking-wider transition-colors relative text-ink">
+        Technical Specifications
+        <div class="tab-line absolute bottom-0 left-0 right-0 h-0.5 bg-ink"></div>
+      </button>
+
+      <button onclick="VexoStore.productDetail.setTab('shipping')" id="tab-btn-shipping" class="tab-btn pb-3 text-xs font-extrabold uppercase tracking-wider transition-colors relative text-stone hover:text-ink">
+        Delivery & Warranty
+        <div class="tab-line absolute bottom-0 left-0 right-0 h-0.5 bg-ink hidden"></div>
+      </button>
+
+      <button onclick="VexoStore.productDetail.setTab('reviews')" id="tab-btn-reviews" class="tab-btn pb-3 text-xs font-extrabold uppercase tracking-wider transition-colors relative text-stone hover:text-ink">
+        Customer Reviews ({{ product.reviewsCount }})
+        <div class="tab-line absolute bottom-0 left-0 right-0 h-0.5 bg-ink hidden"></div>
+      </button>
+    </div>
+
+    <!-- Tab 1: Specs -->
+    <div id="tab-content-specs" class="tab-content-panel grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% if product.specs %}
+        {% for key, val in product.specs.items() %}
+        <div class="flex justify-between p-3.5 rounded-lg bg-warm border border-sand text-xs">
+          <span class="text-stone font-bold uppercase text-[10px]">{{ key }}</span>
+          <span class="font-semibold text-ink">{{ val }}</span>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Tab 2: Shipping -->
+    <div id="tab-content-shipping" class="tab-content-panel space-y-4 text-xs text-stone font-semibold leading-relaxed hidden">
+      <p>• Dispatched within 24 hours from VEXO Systems fulfillment centers in Stockholm and San Francisco.</p>
+      <p>• Priority air logistics takes 2-4 business days internationally with end-to-end telemetry tracking.</p>
+      <p>• Covered under VEXO Global 2-Year Replacement Warranty for technical defects.</p>
+    </div>
+
+    <!-- Tab 3: Reviews -->
+    <div id="tab-content-reviews" class="tab-content-panel space-y-6 hidden">
+      <div class="flex justify-between items-center">
+        <h4 class="text-sm font-bold text-ink uppercase tracking-wider">Verified Customer Reviews</h4>
+        <button onclick="VexoStore.productDetail.openReviewModal()" class="btn-matte btn-primary py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+          <i data-lucide="message-square" class="w-4 h-4"></i> Write Review
+        </button>
+      </div>
+
+      <div class="space-y-4" id="reviews-list-container">
+        {% if product.reviews and product.reviews|length > 0 %}
+          {% for rev in product.reviews %}
+          <div class="p-4 rounded-xl bg-warm border border-sand space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <img src="{{ rev.user.avatar or 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100' }}" alt="" class="w-8 h-8 rounded-full object-cover">
+                <div>
+                  <h5 class="text-xs font-bold text-ink flex items-center gap-1">
+                    {{ rev.user.name }} <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>
+                  </h5>
+                  <span class="text-[10px] text-stone font-semibold">{{ rev.createdAt[:10] }}</span>
+                </div>
+              </div>
+
+              <div class="flex text-gold gap-0.5">
+                {% for star in range(rev.rating) %}
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+                {% endfor %}
+              </div>
+            </div>
+            {% if rev.title %}
+            <h6 class="text-xs font-bold text-ink mt-1">{{ rev.title }}</h6>
+            {% endif %}
+            <p class="text-xs text-stone font-semibold">{{ rev.comment }}</p>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-xs text-stone font-semibold" id="no-reviews-placeholder">No reviews published yet. Be the first to submit feedback.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div id="review-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden">
+    <div onclick="VexoStore.productDetail.closeReviewModal()" class="fixed inset-0 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+    <div id="review-modal-box" class="relative w-full max-w-md bg-card border border-sand rounded-2xl p-6 shadow-modal z-10 my-auto text-ink theme-transition opacity-0 scale-95 transition-all duration-300">
+      <button onclick="VexoStore.productDetail.closeReviewModal()" class="absolute top-4 right-4 p-1 rounded-full text-stone hover:text-ink hover:bg-warm transition-colors cursor-pointer">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h3 class="text-lg font-bold tracking-tight text-ink font-serif mb-4">Write Verified Review</h3>
+      
+      <form onsubmit="VexoStore.productDetail.handleReviewSubmit(event)" class="space-y-4">
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Rating</label>
+          <div class="flex gap-2 text-gold">
+            {% for s in range(1, 6) %}
+            <button key="{{ s }}" type="button" onclick="VexoStore.productDetail.setReviewRating({{ s }})" class="review-star-btn p-1 focus:outline-none cursor-pointer">
+              <i data-lucide="star" data-review-star="{{ s }}" class="w-5 h-5 {{ 'fill-gold text-gold' if s <= 5 else 'text-sand' }}"></i>
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Review Title</label>
+          <input type="text" id="review-title-input" placeholder="e.g. Masterpiece of industrial design" class="minimal-input w-full px-4 py-2.5 rounded-lg text-xs font-semibold text-ink placeholder:text-stone/40">
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-stone uppercase block mb-1">Comment</label>
+          <textarea id="review-comment-input" rows="4" placeholder="Describe your hands-on acoustic or visual experience..." required class="minimal-input w-full p-3 rounded-lg text-xs text-ink focus:outline-none placeholder:text-stone/40"></textarea>
+        </div>
+
+        <button type="submit" class="btn-matte btn-primary w-full py-3 text-xs font-bold cursor-pointer">Submit Review</button>
+      </form>
+    </div>
+  </div>
+
+  {% if related_products %}
+  <div class="py-12 border-t border-sand">
+    <h3 class="text-xl font-black text-ink tracking-tight font-serif uppercase tracking-wider mb-6">Frequently Bought Together</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+      {% for product in related_products %}
+      <div 
+        data-product-card-id="{{ product.id }}"
+        onmousemove="VexoStore.handleProductCardMouseMove(event, this)"
+        onmouseleave="VexoStore.handleProductCardMouseLeave(this)"
+        class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition"
+      >
+        <div class="relative aspect-square rounded-lg overflow-hidden bg-warm mb-4 border border-sand/60">
+          <a href="/product/{{ product.slug }}">
+            <img 
+              src="{{ product.images[0] }}" 
+              alt="{{ product.title }}" 
+              class="w-full h-full object-cover transition-transform duration-300 product-card-image"
+              style="transform: translate(0px, 0px) scale(1);"
+            >
+          </a>
+          
+          <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
+            <!-- Deterministic Badge -->
+            {% set badge = "" %}
+            {% if product.price > 120000 %}
+              {% set badge = "EXCLUSIVE" %}
+            {% elif product.isNew %}
+              {% set badge = "JUST ARRIVED" %}
+            {% elif product.rating >= 4.9 %}
+              {% set badge = "BEST SELLER" %}
+            {% elif product.reviewsCount > 150 %}
+              {% set badge = "EDITOR'S PICK" %}
+            {% elif product.stock < 5 %}
+              {% set badge = "LIMITED" %}
+            {% else %}
+              {% set badge = "FEATURED" %}
+            {% endif %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">{{ badge }}</span>
+          </div>
+          
+          <button 
+            onclick="VexoStore.handleProductCardWishlist(event, '{{ product.id }}')"
+            class="wishlist-btn absolute top-3 right-3 p-2 rounded-full border transition-all z-10 bg-card/90 text-stone hover:text-ink border-sand hover:bg-card"
+            title="Add to Wishlist"
+          >
+            <i data-lucide="heart" class="w-3.5 h-3.5"></i>
+          </button>
+          
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+            <button 
+              onclick="VexoStore.handleProductCardQuickView(event, '{{ product.id }}')"
+              class="flex-1 py-2 px-3 rounded-lg bg-ink hover:bg-titanium text-ivory text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-subtle cursor-pointer"
+            >
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i> Quick View
+            </button>
+            
+            <button 
+              onclick="VexoStore.handleProductCardCompare(event, '{{ product.id }}')"
+              class="compare-btn p-2 rounded-lg border transition-colors cursor-pointer bg-card text-stone hover:text-ink border-sand"
+              title="Add to Compare"
+            >
+              <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex flex-col flex-1 justify-between gap-3">
+          <div>
+            <div class="flex items-center justify-between text-[10px] font-bold text-stone uppercase tracking-widest mb-1">
+              <span>{{ product.category.name or 'Hardware' }}</span>
+              <div class="flex items-center gap-1 text-ink font-extrabold">
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+                <span>{{ product.rating }}</span>
+              </div>
+            </div>
+            
+            <a href="/product/{{ product.slug }}">
+              <h3 class="text-sm font-bold text-ink group-hover:text-gold transition-colors line-clamp-1">{{ product.title }}</h3>
+            </a>
+            <p class="text-[11px] text-stone line-clamp-1 mt-0.5 font-semibold">{{ product.subtitle }}</p>
+          </div>
+          
+          <div class="flex items-center justify-between pt-3 border-t border-sand mt-auto">
+            <div class="flex flex-col">
+              <span class="text-sm font-black text-ink">₹{{ "{:,.0f}".format(product.price) }}</span>
+              {% if product.compareAtPrice %}
+              <span class="text-[10px] text-stone line-through font-semibold">₹{{ "{:,.0f}".format(product.compareAtPrice) }}</span>
+              {% endif %}
+            </div>
+            
+            <button 
+              onclick="VexoStore.handleProductCardAddToCart(event, '{{ product.id }}')"
+              class="p-2.5 rounded-lg bg-warm hover:bg-ink hover:text-ivory border border-sand text-ink transition-all shadow-subtle flex items-center justify-center cursor-pointer"
+              title="Add to Bag"
+            >
+              <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recently Viewed Hardware -->
+  <div id="recently-viewed-section" class="py-12 border-t border-sand hidden">
+    <div class="flex items-center gap-2 mb-6">
+      <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
+      <h3 class="text-xl font-black text-ink font-serif uppercase tracking-wider">Recently Viewed Hardware</h3>
+    </div>
+    <div id="recently-viewed-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-6 gap-6">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.productDetail = {
+    product: {{ product|tojson|safe }},
+    quantity: 1,
+    activeTab: 'specs',
+    selectedImage: 0,
+    reviewRating: 5,
+    
+    init() {
+      // 1. Save in recently viewed
+      const viewed = JSON.parse(localStorage.getItem('vexo_recently_viewed') || '[]');
+      const filtered = viewed.filter(p => p.id !== this.product.id);
+      localStorage.setItem('vexo_recently_viewed', JSON.stringify([this.product, ...filtered].slice(0, 6)));
+      
+      // 2. Render recently viewed
+      this.renderRecentlyViewed();
+      
+      // 3. Update wish button state
+      this.updateWishButton();
+    },
+    
+    selectImage(idx, btn) {
+      this.selectedImage = idx;
+      const mainImg = document.getElementById('main-product-gallery-img');
+      if (mainImg) mainImg.src = this.product.images[idx];
+      
+      document.querySelectorAll('.gallery-thumb-btn').forEach(tb => {
+        tb.className = 'gallery-thumb-btn w-20 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-card border-sand opacity-60 hover:opacity-100';
+      });
+      if (btn) {
+        btn.className = 'gallery-thumb-btn w-20 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-card border-ink scale-95';
+      }
+    },
+    
+    updateQty(delta) {
+      this.quantity = Math.max(1, this.quantity + delta);
+      const val = document.getElementById('product-qty-val');
+      if (val) val.textContent = this.quantity;
+    },
+    
+    addToCart() {
+      VexoStore.cart.addItem(this.product, this.quantity);
+    },
+    
+    buyNow() {
+      VexoStore.cart.addItem(this.product, this.quantity);
+      window.location.href = '/checkout';
+    },
+    
+    toggleWishlist() {
+      VexoStore.wishlist.toggle(this.product);
+      this.updateWishButton();
+    },
+    
+    updateWishButton() {
+      const btn = document.getElementById('product-wish-btn');
+      if (!btn) return;
+      const isWish = VexoStore.wishlist.isWishlisted(this.product.id);
+      const icon = btn.querySelector('i');
+      if (isWish) {
+        btn.className = 'p-4 rounded-lg border transition-all bg-ink text-ivory border-ink';
+        if (icon) icon.classList.add('fill-ivory');
+      } else {
+        btn.className = 'p-4 rounded-lg border transition-all bg-card text-stone hover:text-ink border-sand';
+        if (icon) icon.classList.remove('fill-ivory');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    },
+    
+    setTab(tab) {
+      this.activeTab = tab;
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.replace('text-ink', 'text-stone');
+        btn.querySelector('.tab-line').classList.add('hidden');
+      });
+      document.querySelectorAll('.tab-content-panel').forEach(pnl => {
+        pnl.classList.add('hidden');
+      });
+      
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.replace('text-stone', 'text-ink');
+        activeBtn.querySelector('.tab-line').classList.remove('hidden');
+      }
+      
+      const activeContent = document.getElementById(`tab-content-${tab}`);
+      if (activeContent) {
+        activeContent.classList.remove('hidden');
+      }
+    },
+    
+    async share() {
+      const shareData = {
+        title: this.product.title,
+        text: this.product.subtitle,
+        url: window.location.href
+      };
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (e) {}
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        VexoStore.toasts.add({
+          type: 'info',
+          title: 'Product Link Copied',
+          message: 'Direct product link copied to clipboard.'
+        });
+      }
+    },
+    
+    openReviewModal() {
+      if (!VexoStore.auth.isAuthenticated()) {
+        VexoStore.toasts.add({
+          type: 'info',
+          title: 'Sign In Required',
+          message: 'Please sign in to publish a review.'
+        });
+        setTimeout(() => window.location.href = '/auth?redirect=' + encodeURIComponent(window.location.pathname), 1000);
+        return;
+      }
+      
+      const overlay = document.getElementById('review-modal-overlay');
+      const box = document.getElementById('review-modal-box');
+      if (overlay && box) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+          overlay.querySelector('.fixed.inset-0').classList.replace('opacity-0', 'opacity-100');
+          box.classList.replace('opacity-0', 'opacity-100');
+          box.classList.replace('scale-95', 'scale-100');
+        }, 10);
+      }
+      this.setReviewRating(5);
+    },
+    
+    closeReviewModal() {
+      const overlay = document.getElementById('review-modal-overlay');
+      const box = document.getElementById('review-modal-box');
+      if (overlay && box) {
+        overlay.querySelector('.fixed.inset-0').classList.replace('opacity-100', 'opacity-0');
+        box.classList.replace('opacity-100', 'opacity-0');
+        box.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+    },
+    
+    setReviewRating(rating) {
+      this.reviewRating = rating;
+      document.querySelectorAll('[data-review-star]').forEach(icon => {
+        const starNum = Number(icon.getAttribute('data-review-star'));
+        if (starNum <= rating) {
+          icon.classList.add('fill-gold', 'text-gold');
+        } else {
+          icon.classList.remove('fill-gold', 'text-gold');
+        }
+      });
+    },
+    
+    async handleReviewSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('review-title-input').value.trim();
+      const comment = document.getElementById('review-comment-input').value.trim();
+      
+      try {
+        const res = await vexoApi.fetch(`/api/v1/reviews/products/${this.product.id}`, {
+          method: 'POST',
+          body: {
+            rating: this.reviewRating,
+            title: title,
+            comment: comment
+          }
+        });
+        
+        VexoStore.toasts.add({
+          type: 'success',
+          title: 'Review Posted',
+          message: 'Thank you for your hardware review.'
+        });
+        
+        this.closeReviewModal();
+        
+        // Prepend review to UI list
+        const list = document.getElementById('reviews-list-container');
+        const placeholder = document.getElementById('no-reviews-placeholder');
+        if (placeholder) placeholder.remove();
+        
+        const starsHtml = Array(res.rating).fill('<i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>').join('');
+        const user = VexoStore.auth.getUser();
+        const avatar = user ? user.avatar : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';
+        const name = user ? user.name : 'Anonymous Client';
+        
+        const itemHtml = `
+          <div class="p-4 rounded-xl bg-warm border border-sand space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <img src="${avatar}" alt="" class="w-8 h-8 rounded-full object-cover">
+                <div>
+                  <h5 class="text-xs font-bold text-ink flex items-center gap-1">
+                    ${name} <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>
+                  </h5>
+                  <span class="text-[10px] text-stone font-semibold">Just now</span>
+                </div>
+              </div>
+              <div class="flex text-gold gap-0.5">
+                ${starsHtml}
+              </div>
+            </div>
+            ${title ? `<h6 class="text-xs font-bold text-ink mt-1">${title}</h6>` : ''}
+            <p class="text-xs text-stone font-semibold">${comment}</p>
+          </div>
+        `;
+        list.insertAdjacentHTML('afterbegin', itemHtml);
+        if (window.lucide) window.lucide.createIcons();
+        
+      } catch (err) {
+        VexoStore.toasts.add({
+          type: 'error',
+          title: 'Review Failed',
+          message: err.message
+        });
+      }
+    },
+    
+    renderRecentlyViewed() {
+      const items = JSON.parse(localStorage.getItem('vexo_recently_viewed') || '[]');
+      const filtered = items.filter(p => p.id !== this.product.id).slice(0, 6);
+      
+      const section = document.getElementById('recently-viewed-section');
+      const grid = document.getElementById('recently-viewed-grid');
+      
+      if (filtered.length === 0 || !grid || !section) return;
+      
+      grid.innerHTML = filtered.map(p => VexoStore.renderProductCardHTML(p)).join('');
+      section.classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
+    }
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // Register main product & related products
+    VexoStore.productsRegistry["{{ product.id }}"] = {{ product|tojson|safe }};
+    {% for p in related_products %}
+    VexoStore.productsRegistry["{{ p.id }}"] = {{ p|tojson|safe }};
+    {% endfor %}
+    
+    VexoStore.productDetail.init();
+  });
+</script>
+{% endblock %}

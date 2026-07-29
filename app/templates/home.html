@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}VEXO Systems | Industrial Technology & Acoustic Hardware{% endblock %}
+
+{% block content %}
+<div class="relative min-h-screen bg-ivory text-ink overflow-x-hidden theme-transition">
+  <!-- Editorial Magazine Hero Section -->
+  <section class="relative pt-32 pb-20 lg:pt-40 lg:pb-28 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <!-- Left Editorial Copy -->
+      <div class="lg:col-span-6 space-y-6">
+        <div class="inline-flex items-center gap-2 text-xs font-extrabold text-gold uppercase tracking-[0.25em]">
+          <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+          SYSTEM RELEASE 2026 • STOCKHOLM
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl 3xl:text-8xl font-extrabold tracking-tight text-ink editorial-display font-serif">
+          ACOUSTIC & VISUAL PRECISION.
+        </h1>
+
+        <p class="text-stone text-xs sm:text-sm lg:text-base max-w-xl leading-relaxed font-semibold">
+          VEXO Systems architects planar magnetic transducers, QD-OLED master displays, and milled aluminum keydecks for international technologists.
+        </p>
+
+        <!-- CTAs -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4">
+          <a href="/shop" class="btn-matte btn-primary py-3 px-8 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+            Explore Catalogue Index <i data-lucide="arrow-right" class="w-4 h-4 text-gold"></i>
+          </a>
+
+          <a href="/shop?category=acoustic-architecture" class="btn-matte btn-secondary py-3 px-8 text-xs font-black uppercase tracking-wider flex items-center justify-center cursor-pointer">
+            Planar Acoustics
+          </a>
+        </div>
+
+        <!-- Spec Ticker -->
+        <div class="pt-8 border-t border-sand flex items-center gap-6 text-[11px] sm:text-xs font-mono text-stone">
+          <div>
+            <span class="block text-ink font-bold">50mm Beryllium</span>
+            <span>Planar Transducers</span>
+          </div>
+          <div class="h-6 w-[1px] bg-sand"></div>
+          <div>
+            <span class="block text-ink font-bold">4K QD-OLED</span>
+            <span>240Hz Master Display</span>
+          </div>
+          <div class="h-6 w-[1px] bg-sand"></div>
+          <div>
+            <span class="block text-ink font-bold">CNC 6063</span>
+            <span>Aerospace Aluminum</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Full-Bleed Imagery Frame -->
+      <div class="lg:col-span-6 relative">
+        <div class="relative aspect-[4/5] 3xl:aspect-[16/11] rounded-2xl overflow-hidden studio-card border border-sand bg-warm shadow-card">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1600" alt="VEXO Soundstage One" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent"></div>
+
+          <div class="absolute bottom-6 left-6 right-6 p-6 rounded-xl bg-card/95 backdrop-blur-md border border-sand shadow-subtle flex items-center justify-between">
+            <div>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider mb-1">FLAGSHIP ACOUSTICS</span>
+              <h3 class="text-base font-bold text-ink">VEXO Soundstage One</h3>
+              <p class="text-[11px] text-stone">Planar magnetic transducers • ₹41,999</p>
+            </div>
+            <a href="/product/vexo-soundstage-one" class="btn-matte btn-primary py-2 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer">
+              View Device <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-gold"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Devices Section -->
+  <section class="py-20 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12 border-t border-sand">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+      <div>
+        <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-1">CURATED SELECTION</span>
+        <h2 class="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">Flagship Hardware Devices</h2>
+      </div>
+      <a href="/shop" class="inline-flex items-center gap-2 text-xs font-bold text-ink hover:text-gold uppercase tracking-wider transition-colors">
+        Explore Full Index <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-gold"></i>
+      </a>
+    </div>
+
+    <!-- Responsive Grid up to 5 cols on 3xl -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+      {% for product in featured_products[:5] %}
+      <div 
+        data-product-card-id="{{ product.id }}"
+        onmousemove="VexoStore.handleProductCardMouseMove(event, this)"
+        onmouseleave="VexoStore.handleProductCardMouseLeave(this)"
+        class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition"
+      >
+        <div class="relative aspect-square rounded-lg overflow-hidden bg-warm mb-4 border border-sand/60">
+          <a href="/product/{{ product.slug }}">
+            <img 
+              src="{{ product.images[0] }}" 
+              alt="{{ product.title }}" 
+              class="w-full h-full object-cover transition-transform duration-300 product-card-image"
+              style="transform: translate(0px, 0px) scale(1);"
+            >
+          </a>
+          
+          <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
+            {% set badge = 'PREMIUM' %}
+            {% if product.price > 120000 %}
+              {% set badge = 'EXCLUSIVE' %}
+            {% elif product.isNew %}
+              {% set badge = 'JUST ARRIVED' %}
+            {% elif product.rating >= 4.9 %}
+              {% set badge = 'BEST SELLER' %}
+            {% elif product.reviewsCount > 150 %}
+              {% set badge = "EDITOR'S PICK" %}
+            {% elif product.stock < 5 %}
+              {% set badge = 'LIMITED' %}
+            {% endif %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">{{ badge }}</span>
+          </div>
+          
+          <button 
+            data-wishlist-id="{{ product.id }}"
+            onclick="VexoStore.handleProductCardWishlist(event, '{{ product.id }}')"
+            class="absolute top-3 right-3 p-2 rounded-full border transition-all z-10 bg-card/90 text-stone hover:text-ink border-sand hover:bg-card"
+            title="Add to Wishlist"
+          >
+            <i data-lucide="heart" class="w-3.5 h-3.5"></i>
+          </button>
+          
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+            <button 
+              onclick="VexoStore.handleProductCardQuickView(event, '{{ product.id }}')"
+              class="flex-1 py-2 px-3 rounded-lg bg-ink hover:bg-titanium text-ivory text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-subtle cursor-pointer"
+            >
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i> Quick View
+            </button>
+            
+            <button 
+              data-compare-id="{{ product.id }}"
+              onclick="VexoStore.handleProductCardCompare(event, '{{ product.id }}')"
+              class="p-2 rounded-lg border transition-colors cursor-pointer bg-card text-stone hover:text-ink border-sand"
+              title="Add to Compare"
+            >
+              <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex flex-col flex-1 justify-between gap-3">
+          <div>
+            <div class="flex items-center justify-between text-[10px] font-bold text-stone uppercase tracking-widest mb-1">
+              <span>{{ product.category.name or 'Hardware' }}</span>
+              <div class="flex items-center gap-1 text-ink font-extrabold">
+                <i data-lucide="star" class="w-3 h-3 fill-gold text-gold"></i>
+                <span>{{ product.rating }}</span>
+              </div>
+            </div>
+            
+            <a href="/product/{{ product.slug }}">
+              <h3 class="text-sm font-bold text-ink group-hover:text-gold transition-colors line-clamp-1">{{ product.title }}</h3>
+            </a>
+            <p class="text-[11px] text-stone line-clamp-1 mt-0.5 font-semibold">{{ product.subtitle }}</p>
+          </div>
+          
+          <div class="flex items-center justify-between pt-3 border-t border-sand mt-auto">
+            <div class="flex flex-col">
+              <span class="text-sm font-black text-ink">₹{{ "{:,.0f}".format(product.price) }}</span>
+              {% if product.compareAtPrice %}
+              <span class="text-[10px] text-stone line-through font-semibold">₹{{ "{:,.0f}".format(product.compareAtPrice) }}</span>
+              {% endif %}
+            </div>
+            
+            <button 
+              onclick="VexoStore.handleProductCardAddToCart(event, '{{ product.id }}')"
+              class="p-2.5 rounded-lg bg-warm hover:bg-ink hover:text-ivory border border-sand text-ink transition-all shadow-subtle flex items-center justify-center cursor-pointer"
+              title="Add to Bag"
+            >
+              <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Bento Categories Magazine Spread -->
+  <section class="py-24 bg-warm border-y border-sand">
+    <div class="max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12">
+      <div class="max-w-2xl mb-16">
+        <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-1">SYSTEM DIVISIONS</span>
+        <h2 class="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">Architectural Product Categories</h2>
+        <p class="text-stone text-xs sm:text-sm mt-2 font-semibold leading-relaxed">Explore hardware systems tailored for soundstages, visual color grading, and tactile desk infrastructures.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for cat in categories[:3] %}
+        {% set idx = loop.index0 %}
+        <div 
+          onclick="window.location.href='/shop?category={{ cat.slug }}'"
+          class="group relative rounded-2xl overflow-hidden studio-card border border-sand cursor-pointer p-8 flex flex-col justify-end min-h-[380px] bg-card {{ 'md:col-span-2' if idx == 0 else '' }}"
+        >
+          <img src="{{ cat.image }}" alt="{{ cat.name }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-[1.03] transition-transform duration-700">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+
+          <div class="relative z-10 text-white">
+            <span class="text-[10px] font-bold text-gold uppercase tracking-widest block mb-1">{{ cat._count.products if cat._count else 3 }} DEVICES</span>
+            <h3 class="text-2xl font-bold tracking-tight text-white font-serif">{{ cat.name }}</h3>
+            <p class="text-xs text-gray-200 mt-1 line-clamp-2">{{ cat.description }}</p>
+
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-white mt-4 group-hover:translate-x-2 transition-transform uppercase tracking-wider">
+              Explore Index <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-gold"></i>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Dieter Rams Principles Section -->
+  <section class="py-24 max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12">
+    <div class="max-w-2xl mb-16">
+      <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-1">INDUSTRIAL PHILOSOPHY</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">Inspired by Dieter Rams Principles</h2>
+      <p class="text-stone text-xs sm:text-sm mt-2 font-semibold">Less, but better. Handcrafted with honest materials and functional simplicity.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="studio-card p-6 flex flex-col justify-between bg-card border border-sand hover:shadow-modal transition-all duration-300">
+        <div>
+          <span class="text-2xl font-black font-mono text-gold block mb-4">01</span>
+          <h4 class="text-base font-bold text-ink mb-2">Good design is innovative</h4>
+          <p class="text-xs text-stone leading-relaxed font-semibold">Planar magnetic acoustic drivers engineered from custom 50mm beryllium composite transducers.</p>
+        </div>
+      </div>
+      <div class="studio-card p-6 flex flex-col justify-between bg-card border border-sand hover:shadow-modal transition-all duration-300">
+        <div>
+          <span class="text-2xl font-black font-mono text-gold block mb-4">02</span>
+          <h4 class="text-base font-bold text-ink mb-2">Good design makes a product useful</h4>
+          <p class="text-xs text-stone leading-relaxed font-semibold">Master 4K QD-OLED visual accuracy with 99% DCI-P3 native color spectrum for digital artists.</p>
+        </div>
+      </div>
+      <div class="studio-card p-6 flex flex-col justify-between bg-card border border-sand hover:shadow-modal transition-all duration-300">
+        <div>
+          <span class="text-2xl font-black font-mono text-gold block mb-4">03</span>
+          <h4 class="text-base font-bold text-ink mb-2">Good design is aesthetic</h4>
+          <p class="text-xs text-stone leading-relaxed font-semibold">Solid CNC 6063 aerospace aluminum enclosures milled from single 3.2kg metal billets.</p>
+        </div>
+      </div>
+      <div class="studio-card p-6 flex flex-col justify-between bg-card border border-sand hover:shadow-modal transition-all duration-300">
+        <div>
+          <span class="text-2xl font-black font-mono text-gold block mb-4">04</span>
+          <h4 class="text-base font-bold text-ink mb-2">Good design is unobtrusive</h4>
+          <p class="text-xs text-stone leading-relaxed font-semibold">Tactile magnetic Hall Effect switches with sub-millimeter rapid-trigger precision.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Editorial Testimonials -->
+  <section class="py-24 bg-warm border-t border-sand">
+    <div class="max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="text-[10px] font-bold text-gold uppercase tracking-[0.2em] block mb-1">INTERNATIONAL REVIEWS</span>
+        <h2 class="text-3xl font-black text-ink tracking-tight font-serif">Trusted by Architects & Engineers</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="studio-card p-6 flex flex-col justify-between bg-card hover:shadow-modal transition-all duration-300">
+          <div>
+            <div class="flex text-gold gap-1 mb-4">
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+            </div>
+            <p class="text-xs text-stone italic leading-relaxed font-semibold">"VEXO Soundstage One is a masterpiece of acoustic engineering. The planar magnetic transducer clarity surpasses studio monitors twice the price."</p>
+          </div>
+          <div class="flex items-center gap-3 pt-6 border-t border-sand mt-6">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" alt="Frederik Lindqvist" class="w-9 h-9 rounded-full object-cover border border-sand">
+            <div>
+              <h5 class="text-xs font-bold text-ink flex items-center gap-1">Frederik Lindqvist <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i></h5>
+              <p class="text-[10px] text-stone font-semibold">Principal Acoustic Architect, Stockholm</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card p-6 flex flex-col justify-between bg-card hover:shadow-modal transition-all duration-300">
+          <div>
+            <div class="flex text-gold gap-1 mb-4">
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+            </div>
+            <p class="text-xs text-stone italic leading-relaxed font-semibold">"The QD-OLED calibration and anodized aluminum enclosure speak the language of Leica and Braun. True luxury hardware."</p>
+          </div>
+          <div class="flex items-center gap-3 pt-6 border-t border-sand mt-6">
+            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200" alt="Evelina Thorne" class="w-9 h-9 rounded-full object-cover border border-sand">
+            <div>
+              <h5 class="text-xs font-bold text-ink flex items-center gap-1">Evelina Thorne <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i></h5>
+              <p class="text-[10px] text-stone font-semibold">Industrial Designer, Copenhagen</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card p-6 flex flex-col justify-between bg-card hover:shadow-modal transition-all duration-300">
+          <div>
+            <div class="flex text-gold gap-1 mb-4">
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-gold text-gold"></i>
+            </div>
+            <p class="text-xs text-stone italic leading-relaxed font-semibold">"Every tactile touchpoint on the VEXO Keydeck feels handcrafted. An indispensable tool in our industrial studio."</p>
+          </div>
+          <div class="flex items-center gap-3 pt-6 border-t border-sand mt-6">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200" alt="Henrik Vang" class="w-9 h-9 rounded-full object-cover border border-sand">
+            <div>
+              <h5 class="text-xs font-bold text-ink flex items-center gap-1">Henrik Vang <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i></h5>
+              <p class="text-[10px] text-stone font-semibold">Creative Director, Oslo</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Subscription -->
+  <section class="py-20 border-t border-sand bg-card">
+    <div class="max-w-4xl mx-auto px-4 text-center space-y-4">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider">VEXO DISPATCH</span>
+      <h2 class="text-3xl font-black text-ink font-serif tracking-tight uppercase">Subscribe to VEXO System Releases</h2>
+      <p class="text-xs sm:text-sm text-stone max-w-md mx-auto font-semibold leading-relaxed">Receive exclusive priority access to new planar magnetic acoustic drops, firmware updates, and limited hardware editions.</p>
+      
+      <div id="newsletter-subscribed-box" class="flex items-center justify-center gap-3 p-4 rounded-xl bg-success/10 border border-success/20 text-success max-w-md mx-auto hidden">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+        <span class="text-xs font-bold">Registration confirmed. Welcome to VEXO telemetry dispatches.</span>
+      </div>
+      <form id="newsletter-subscribe-form" onsubmit="VexoStore.handleNewsletterFormSubmit(event)" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto pt-2">
+        <input type="email" id="newsletter-email-input" placeholder="Enter your email address..." required class="flex-1 px-4 py-3 rounded-lg bg-warm border border-sand text-xs font-semibold text-ink placeholder:text-stone/60 focus:outline-none focus:border-ink transition-colors">
+        <button type="submit" class="btn-matte btn-primary py-2.5 px-5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer">Subscribe</button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.VexoStore.handleNewsletterFormSubmit = (e) => {
+    e.preventDefault();
+    const email = document.getElementById('newsletter-email-input').value.trim().toLowerCase();
+    if (!email) return;
+    
+    let subs = [];
+    try {
+      subs = JSON.parse(localStorage.getItem('vexo_newsletter_subscribers') || '[]');
+    } catch(err) {}
+    
+    if (subs.includes(email)) {
+      VexoStore.toasts.add({
+        type: 'info',
+        title: 'Already Subscribed',
+        message: 'This email is already registered.'
+      });
+      return;
+    }
+    
+    subs.push(email);
+    localStorage.setItem('vexo_newsletter_subscribers', JSON.stringify(subs));
+    
+    VexoStore.toasts.add({
+      type: 'success',
+      title: 'Subscribed Successfully',
+      message: 'You have been registered for VEXO System dispatches.'
+    });
+    
+    document.getElementById('newsletter-subscribe-form').classList.add('hidden');
+    document.getElementById('newsletter-subscribed-box').classList.remove('hidden');
+  };
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // Populate products registry
+    {% for p in featured_products %}
+    VexoStore.productsRegistry["{{ p.id }}"] = {{ p|tojson|safe }};
+    {% endfor %}
+    
+    // Re-check wishlist and compare triggers for flagged flags
+    VexoStore.compare.updateUI();
+    VexoStore.wishlist.updateUI();
+  });
+</script>
+{% endblock %}

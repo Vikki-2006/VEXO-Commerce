@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Hardware Wishlist | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="max-w-[1700px] mx-auto px-4 sm:px-8 space-y-8">
+  <div class="border-b border-custom pb-6">
+    <span class="text-[10px] font-extrabold text-gold uppercase tracking-[0.2em] block mb-1">SAVED DEVICES</span>
+    <h1 class="text-3xl font-serif font-black text-custom-ink">Hardware Wishlist</h1>
+  </div>
+
+  <div id="wishlist-empty" class="studio-card p-12 text-center border-custom bg-custom-card space-y-4 hidden">
+    <i data-lucide="heart" class="w-12 h-12 text-custom-stone mx-auto"></i>
+    <h3 class="text-lg font-bold text-custom-ink">Your Wishlist is Empty</h3>
+    <p class="text-xs text-custom-stone max-w-sm mx-auto">Save acoustic drivers and master displays for later comparison.</p>
+    <a href="/shop" class="btn-matte btn-gold text-xs inline-block">Explore Hardware Index</a>
+  </div>
+
+  <div id="wishlist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function renderWishlist() {
+  const list = vexoCart.getWishlist();
+  const empty = document.getElementById('wishlist-empty');
+  const grid = document.getElementById('wishlist-grid');
+
+  if (list.length === 0) {
+    empty.classList.remove('hidden');
+    grid.innerHTML = '';
+    return;
+  }
+
+  empty.classList.add('hidden');
+  grid.innerHTML = list.map(product => `
+    <div class="studio-card p-4 border-custom flex flex-col justify-between">
+      <div class="relative mb-4 overflow-hidden rounded-xl bg-custom-warm aspect-square flex items-center justify-center">
+        <img src="${product.images ? product.images[0] : ''}" class="w-full h-full object-cover">
+      </div>
+      <div class="space-y-2 flex-grow">
+        <span class="font-mono text-gold text-sm font-bold">$${product.price.toFixed(2)}</span>
+        <a href="/shop/${product.slug}" class="block font-bold text-base text-custom-ink font-serif">${product.title}</a>
+      </div>
+      <div class="pt-4 mt-4 border-t border-custom flex gap-2">
+        <button onclick='vexoCart.addToCart(${JSON.stringify(product)})' class="btn-matte btn-gold flex-1 py-2 text-[11px]">
+          Add to Cart
+        </button>
+        <button onclick='vexoCart.toggleWishlist(${JSON.stringify(product)}); renderWishlist();' class="btn-matte btn-secondary p-2 text-red-400">
+          ✕
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', renderWishlist);
+</script>
+{% endblock %}

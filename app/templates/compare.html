@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Hardware Matrix | VEXO Systems{% endblock %}
+
+{% block content %}
+<div class="pt-28 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen text-ink theme-transition">
+  <!-- Empty State View -->
+  <div id="compare-empty-view" class="max-w-3xl mx-auto text-center hidden pt-8">
+    <div class="studio-card p-12 text-center border-sand bg-card space-y-4 rounded-xl">
+      <i data-lucide="sliders-horizontal" class="w-12 h-12 text-stone mx-auto"></i>
+      <h3 class="text-lg font-bold text-ink">No devices selected for benchmarking</h3>
+      <p class="text-xs text-stone max-w-sm mx-auto">Select products in the catalogue to compare side-by-side hardware specifications.</p>
+      <a href="/shop" class="btn-matte btn-gold text-xs inline-block px-5 py-2.5 font-bold">Explore Index</a>
+    </div>
+  </div>
+
+  <!-- Compare Matrix View -->
+  <div id="compare-matrix-view" class="hidden">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider mb-2">SPECIFICATION BENCHMARKS</span>
+        <h1 class="text-3xl font-black text-ink tracking-tight font-serif">VEXO Hardware Matrix</h1>
+      </div>
+      <button onclick="VexoStore.compare.clear()" class="text-xs font-bold text-danger hover:underline flex items-center gap-1 uppercase tracking-wider cursor-pointer">
+        <i data-lucide="trash-2" class="w-4 h-4"></i> Clear All Devices
+      </button>
+    </div>
+
+    <div id="compare-matrix-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  VexoStore.comparePage = {
+    init() {
+      this.render();
+    },
+    
+    render() {
+      const items = VexoStore.compare.items;
+      const emptyView = document.getElementById('compare-empty-view');
+      const matrixView = document.getElementById('compare-matrix-view');
+      const grid = document.getElementById('compare-matrix-grid');
+      
+      if (!emptyView || !matrixView || !grid) return;
+      
+      if (items.length === 0) {
+        matrixView.classList.add('hidden');
+        emptyView.classList.remove('hidden');
+      } else {
+        emptyView.classList.add('hidden');
+        matrixView.classList.remove('hidden');
+        
+        grid.innerHTML = items.map(prod => {
+          let specsHtml = '';
+          if (prod.specs) {
+            specsHtml = Object.entries(prod.specs).map(([key, val]) => `
+              <div>
+                <span class="text-[9px] text-stone uppercase font-bold block">${key}</span>
+                <span class="font-semibold text-ink">${val}</span>
+              </div>
+            `).join('');
+          }
+          
+          return `
+            <div class="studio-card rounded-xl p-6 border border-sand bg-white flex flex-col justify-between">
+              <div>
+                <div class="relative aspect-square rounded-lg overflow-hidden bg-warm mb-4 border border-sand">
+                  <img src="${prod.images[0]}" alt="${prod.title}" class="w-full h-full object-cover">
+                  <button onclick='VexoStore.compare.toggle(${JSON.stringify(prod).replace(/'/g, "&#39;")})' class="absolute top-3 right-3 p-1.5 rounded-full bg-ink text-white hover:bg-titanium cursor-pointer">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-[9px] font-extrabold text-gold uppercase tracking-wider mb-2">${prod.category?.name || 'Hardware'}</span>
+                <h3 class="text-sm font-bold text-ink line-clamp-1">${prod.title}</h3>
+                <p class="text-base font-black text-gold mt-1">${VexoStore.formatCurrency(prod.price)}</p>
+
+                <!-- Specs -->
+                <div class="mt-6 space-y-3 border-t border-sand pt-4 text-xs">
+                  ${specsHtml}
+                </div>
+              </div>
+
+              <a href="/product/${prod.slug}" class="btn-matte btn-primary py-2.5 px-4 text-xs font-bold text-center mt-6 flex items-center justify-center gap-1 cursor-pointer">
+                View Full Specs <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </a>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      if (window.lucide) window.lucide.createIcons();
+    }
+  };
+  
+  // Connect to state changes
+  window.updateComparePage = () => VexoStore.comparePage.render();
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    VexoStore.comparePage.init();
+  });
+</script>
+{% endblock %}
