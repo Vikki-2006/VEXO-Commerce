@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@import "tailwindcss";
+
+@layer base {
+  /* Light Theme (Warm Sandstone Luxury) */
+  :root {
+    color-scheme: light;
+    --canvas-bg: #FAF8F5;
+    --warm-bg: #F3F0EA;
+    --surface-bg: #FFFFFF;
+    --surface-elevated: #FFFFFF;
+    --text-primary: #0F0E0D;
+    --text-secondary: #64625E;
+    --text-muted: #8A8782;
+    --border-color: #E5E2DC;
+    --border-strong: #0F0E0D;
+    --accent-gold: #C5A059;
+    --accent-gold-hover: #B08C46;
+    --accent-gold-light: #F4E8D0;
+    --titanium: #2C2B29;
+    --shadow-subtle: 0 4px 15px rgba(15, 14, 13, 0.04);
+    --shadow-card: 0 10px 35px rgba(15, 14, 13, 0.06);
+    --shadow-modal: 0 25px 60px rgba(15, 14, 13, 0.12);
+  }
+
+  /* Dark Theme (Matte Obsidian Luxury) */
+  .dark {
+    color-scheme: dark;
+    --canvas-bg: #0A0908;
+    --warm-bg: #121110;
+    --surface-bg: #161514;
+    --surface-elevated: #1F1E1C;
+    --text-primary: #F5F3EF;
+    --text-secondary: #A3A09A;
+    --text-muted: #73706A;
+    --border-color: #282624;
+    --border-strong: #F5F3EF;
+    --accent-gold: #D4AF37;
+    --accent-gold-hover: #E5C158;
+    --accent-gold-light: #332B14;
+    --titanium: #E2DFD8;
+    --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.5);
+    --shadow-modal: 0 30px 80px rgba(0, 0, 0, 0.7);
+  }
+
+  body {
+    background-color: var(--canvas-bg);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    color: var(--text-primary);
+    transition: color 0.5s ease-in-out;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Smooth 500ms Theme Transitions */
+.theme-transition {
+  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out, border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--canvas-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold);
+}
+
+/* VEXO Studio Utilities */
+.studio-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.5s ease-in-out, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.studio-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+}
+
+.minimal-input {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: background-color 0.5s ease-in-out, border-color 0.2s ease, color 0.5s ease-in-out;
+}
+
+.minimal-input:focus {
+  outline: none;
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+}
+
+.editorial-display {
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.gold-accent-text {
+  color: var(--accent-gold);
+}

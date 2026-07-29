@@ -1,0 +1,21 @@
+{
+  "short_name": "VEXO",
+  "name": "VEXO Systems Luxury E-Commerce",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0F0F10",
+  "theme_color": "#C5A059",
+  "display": "standalone",
+  "orientation": "portrait"
+}
