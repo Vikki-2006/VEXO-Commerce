@@ -1,110 +1,102 @@
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { PrismaClient } from '@prisma/client';
-import { config } from './config/index.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, HTTPException, status
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
-import authRoutes from './routes/authRoutes.js';
-import productRoutes from './routes/productRoutes.js';
-import categoryRoutes from './routes/categoryRoutes.js';
-import orderRoutes from './routes/orderRoutes.js';
-import reviewRoutes from './routes/reviewRoutes.js';
-import couponRoutes from './routes/couponRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
+from app.database import engine, Base, SessionLocal
+from app.seed import seed_db
+from app.models import User
+from app.routers import auth, products, categories, orders, reviews, coupons, admin, telemetry
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize Database Tables
+    Base.metadata.create_all(bind=engine)
+    
+    # Auto-seed database
+    db: Session = SessionLocal()
+    try:
+        if db.query(User).count() == 0:
+            seed_db()
+    except Exception as e:
+        print(f"Seed warning: {e}")
+    finally:
+        db.close()
+        
+    yield
 
-const app = express();
-const prisma = new PrismaClient();
+app = FastAPI(
+    title="VEXO Luxury E-Commerce FastAPI Engine",
+    description="Production Python FastAPI backend engine for VEXO planar hardware, acoustics, and order telemetry.",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    lifespan=lifespan
+)
 
-// Request Tracker
-let totalRequests = 0;
-app.use((req, res, next) => {
-  totalRequests++;
-  next();
-});
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-// Middleware
-app.use(cors({ origin: '*', credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+# Request counter middleware
+@app.middleware("http")
+async def count_requests(request: Request, call_next):
+    telemetry.increment_request_counter()
+    response = await call_next(request)
+    return response
 
-// Serve uploaded images statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+# Serve static upload files
+uploads_dir = os.path.join(os.path.dirname(__file__), "../uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
-// Telemetry API Endpoint for live updates
-app.get('/api/v1/telemetry', async (req, res) => {
-  let dbStatus = 'Connected';
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-  } catch (e) {
-    dbStatus = 'Disconnected';
-  }
-  const mem = process.memoryUsage();
-  res.json({
-    success: true,
-    backendVersion: '1.0.0',
-    nodeVersion: process.version,
-    environment: process.env.NODE_ENV || 'development',
-    serverTime: new Date().toISOString(),
-    uptimeSeconds: Math.floor(process.uptime()),
-    dbStatus,
-    totalRequests,
-    memory: {
-      rssMB: (mem.rss / (1024 * 1024)).toFixed(1),
-      heapUsedMB: (mem.heapUsed / (1024 * 1024)).toFixed(1),
-    },
-  });
-});
+# Include Routers
+app.include_router(telemetry.router)
+app.include_router(auth.router)
+app.include_router(products.router)
+app.include_router(categories.router)
+app.include_router(orders.router)
+app.include_router(reviews.router)
+app.include_router(coupons.router)
+app.include_router(admin.router)
 
-// OpenAPI Spec Endpoint
-app.get('/api/v1/openapi.json', (req, res) => {
-  res.json({
-    openapi: '3.0.0',
-    info: {
-      title: 'VEXO Systems Luxury E-Commerce API',
-      version: '1.0.0',
-      description: 'Production Express backend for VEXO hardware, planar acoustics, and order telemetry.',
-    },
-    paths: {
-      '/api/v1/health': { get: { summary: 'Server Health Check', responses: { '200': { description: 'Healthy' } } } },
-      '/api/v1/products': { get: { summary: 'Get Product Catalog Index', responses: { '200': { description: 'Product list' } } } },
-      '/api/v1/categories': { get: { summary: 'Get Categories Index', responses: { '200': { description: 'Categories list' } } } },
-      '/api/v1/auth/login': { post: { summary: 'User / Admin Authentication', responses: { '200': { description: 'JWT Token and user profile' } } } },
-      '/api/v1/orders': { post: { summary: 'Create New Hardware Order', responses: { '201': { description: 'Order created' } } } },
-      '/api/v1/coupons/validate': { post: { summary: 'Validate Promotional Coupon', responses: { '200': { description: 'Discount payload' } } } },
-      '/api/v1/admin/metrics': { get: { summary: 'Admin Dashboard Analytics', responses: { '200': { description: 'Revenue & order metrics' } } } },
-    },
-  });
-});
+# Standardized Error Response Formatter for Express compatibility
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail}
+    )
 
-// Root Route - Developer Landing Dashboard
-app.get('/', async (req, res) => {
-  if (req.headers.accept && req.headers.accept.includes('text/html')) {
-    let dbStatus = 'Connected';
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-    } catch {
-      dbStatus = 'Disconnected';
-    }
-    const mem = process.memoryUsage();
-    const rss = (mem.rss / (1024 * 1024)).toFixed(1);
-    const heap = (mem.heapUsed / (1024 * 1024)).toFixed(1);
-    const uptimeSec = Math.floor(process.uptime());
+# 404 Handler for Unknown Routes
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={"success": False, "message": "API route not found"}
+    )
 
-    res.setHeader('Content-Type', 'text/html');
-    return res.send(`
+# Root Route - Developer Landing Response & Status Page
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    accept_header = request.headers.get("accept", "")
+    if "text/html" in accept_header:
+        html_content = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VEXO API Engine v1.0.0</title>
+  <title>VEXO FastAPI Engine v1.0.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -120,7 +112,6 @@ app.get('/', async (req, res) => {
       --stone: #A19D94;
       --emerald: #10B981;
       --emerald-bg: rgba(16, 185, 129, 0.12);
-      --rose: #F43F5E;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -246,7 +237,6 @@ app.get('/', async (req, res) => {
       margin-bottom: 16px;
     }
     
-    /* Telemetry Grid */
     .telemetry-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -273,11 +263,8 @@ app.get('/', async (req, res) => {
       font-weight: 700;
       color: var(--ink);
     }
-    .db-live {
-      color: var(--emerald);
-    }
+    .db-live { color: var(--emerald); }
 
-    /* API Documentation Cards */
     .cards-grid {
       display: grid;
       gap: 12px;
@@ -388,28 +375,25 @@ app.get('/', async (req, res) => {
       transition: all 0.3s ease;
       pointer-events: none;
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <header>
       <div class="brand">VEXO</div>
-      <div class="tagline">SYSTEMS BACKEND TELEMETRY • EST. 2026</div>
+      <div class="tagline">FASTAPI BACKEND TELEMETRY • EST. 2026</div>
     </header>
 
     <div class="status-bar">
       <div class="status-badge">
         <div class="status-dot"></div>
-        <span id="liveStatusText">Server Online • 200 OK</span>
+        <span id="liveStatusText">FastAPI Engine Online • 200 OK</span>
       </div>
 
       <div class="actions">
         <a href="http://localhost:5173" class="btn btn-primary">Launch Frontend (5173)</a>
-        <a href="/api/v1/openapi.json" target="_blank" class="btn btn-secondary">OpenAPI 3.0 Specs</a>
+        <a href="/docs" class="btn btn-secondary">Interactive Swagger Docs (/docs)</a>
       </div>
     </div>
 
@@ -417,43 +401,42 @@ app.get('/', async (req, res) => {
     <div class="section-title">System Metrics & Telemetry</div>
     <div class="telemetry-grid">
       <div class="telemetry-card">
-        <div class="telemetry-label">Backend Version</div>
-        <div class="telemetry-value">v1.0.0</div>
+        <div class="telemetry-label">Backend Engine</div>
+        <div class="telemetry-value">FastAPI v1.0.0</div>
       </div>
       <div class="telemetry-card">
-        <div class="telemetry-label">Node.js Engine</div>
-        <div class="telemetry-value">${process.version}</div>
+        <div class="telemetry-label">Python Runtime</div>
+        <div class="telemetry-value">v3.13</div>
       </div>
       <div class="telemetry-card">
         <div class="telemetry-label">Environment</div>
-        <div class="telemetry-value">${process.env.NODE_ENV || 'development'}</div>
+        <div class="telemetry-value">development</div>
       </div>
       <div class="telemetry-card">
         <div class="telemetry-label">Database Status</div>
-        <div class="telemetry-value db-live" id="dbStatusValue">● ${dbStatus}</div>
+        <div class="telemetry-value db-live" id="dbStatusValue">● Connected</div>
       </div>
       <div class="telemetry-card">
         <div class="telemetry-label">Server Uptime</div>
-        <div class="telemetry-value" id="uptimeValue">${uptimeSec}s</div>
+        <div class="telemetry-value" id="uptimeValue">0s</div>
       </div>
       <div class="telemetry-card">
         <div class="telemetry-label">Total Requests</div>
-        <div class="telemetry-value" id="requestsValue">${totalRequests}</div>
+        <div class="telemetry-value" id="requestsValue">0</div>
       </div>
       <div class="telemetry-card">
-        <div class="telemetry-label">RAM (RSS / Heap)</div>
-        <div class="telemetry-value" id="memoryValue">${rss}MB / ${heap}MB</div>
+        <div class="telemetry-label">RAM (RSS / VMS)</div>
+        <div class="telemetry-value" id="memoryValue">0MB / 0MB</div>
       </div>
       <div class="telemetry-card">
         <div class="telemetry-label">Current Server Time</div>
-        <div class="telemetry-value" id="serverTimeValue" style="font-size:11px;">${new Date().toLocaleTimeString()}</div>
+        <div class="telemetry-value" id="serverTimeValue" style="font-size:11px;">--:--:--</div>
       </div>
     </div>
 
-    <!-- API Endpoint Documentation -->
+    <!-- API Endpoint Documentation Cards -->
     <div class="section-title">API Endpoint Documentation</div>
     <div class="cards-grid">
-      <!-- Endpoint 1 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -468,7 +451,6 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Endpoint 2 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -483,7 +465,6 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Endpoint 3 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -498,7 +479,6 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Endpoint 4 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -513,7 +493,6 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Endpoint 5 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -528,7 +507,6 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Endpoint 6 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -543,7 +521,6 @@ app.get('/', async (req, res) => {
         </div>
       </div>
 
-      <!-- Endpoint 7 -->
       <div class="api-card">
         <div class="api-card-header">
           <div class="endpoint-path">
@@ -561,7 +538,7 @@ app.get('/', async (req, res) => {
 
     <!-- Footer -->
     <footer>
-      <div>VEXO Backend API • Version 1.0.0</div>
+      <div>VEXO FastAPI Backend API • Version 1.0.0</div>
       <div>Build Date: 2026-07-29</div>
       <div>© 2026 VEXO Systems. All rights reserved.</div>
     </footer>
@@ -578,7 +555,6 @@ app.get('/', async (req, res) => {
       setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    // Live Server Telemetry Polling
     async function updateTelemetry() {
       try {
         const res = await fetch('/api/v1/telemetry');
@@ -600,54 +576,20 @@ app.get('/', async (req, res) => {
     }
 
     setInterval(updateTelemetry, 3000);
+    updateTelemetry();
     setInterval(() => {
       document.getElementById('serverTimeValue').innerText = new Date().toLocaleTimeString();
     }, 1000);
   </script>
 </body>
 </html>
-    `);
-  }
+        """
+        return HTMLResponse(content=html_content)
 
-  res.json({
-    success: true,
-    message: 'VEXO E-Commerce Backend is running 🚀',
-    version: '1.0.0',
-    status: 'OK',
-    api: '/api/v1',
-  });
-});
-
-// Health Check
-app.get('/api/v1/health', (req, res) => {
-  res.json({
-    success: true,
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'VEXO API v1',
-  });
-});
-
-// API Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/products', productRoutes);
-app.use('/api/v1/categories', categoryRoutes);
-app.use('/api/v1/orders', orderRoutes);
-app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1/coupons', couponRoutes);
-app.use('/api/v1/admin', adminRoutes);
-
-// 404 Handler for Unknown Routes
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API route not found',
-  });
-});
-
-// Global Error Middleware
-app.use(errorHandler);
-
-app.listen(config.port, () => {
-  console.log(`🚀 VEXO Luxury E-Commerce Server running on http://localhost:${config.port}`);
-});
+    return JSONResponse(content={
+        "success": True,
+        "message": "VEXO E-Commerce Backend is running 🚀",
+        "version": "1.0.0",
+        "status": "OK",
+        "api": "/api/v1"
+    })
