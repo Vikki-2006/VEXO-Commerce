@@ -1,112 +1,206 @@
-# VEXO Systems — Python Full Stack E-Commerce Platform
+# 🛒 VEXO-Commerce
 
-A 100% Python Full Stack E-Commerce Platform built with **FastAPI**, **Jinja2**, **PostgreSQL**, **SQLAlchemy 2.0**, **Alembic**, **HTML5**, **CSS3**, and **Vanilla JavaScript**.
+> A modern, production-ready Full Stack E-Commerce Platform built with **FastAPI**, **Jinja2**, **PostgreSQL**, **SQLAlchemy**, and **React-inspired UI**.
+
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## 🏛 Architecture Overview
+## 📖 Overview
 
-VEXO Systems is architected as a pure Python application serving both server-rendered Jinja2 HTML templates and REST API endpoints.
+VEXO-Commerce is a production-ready e-commerce platform featuring:
+
+- 🔐 JWT Authentication
+- 👤 User Accounts
+- 🛍 Product Catalog
+- 🗂 Categories
+- ❤️ Wishlist
+- 🛒 Shopping Cart
+- 📦 Order Management
+- 🎫 Coupon System
+- ⭐ Product Reviews
+- 🔍 Search & Filtering
+- 📊 Admin Dashboard
+- 📱 Responsive UI
+
+The backend is powered by **FastAPI**, while the frontend uses **Jinja2 templates** with a premium React-inspired interface.
+
+---
+
+# ✨ Features
+
+## Authentication
+
+- JWT Authentication
+- Secure Password Hashing
+- Login / Register
+- Protected Routes
+
+## Products
+
+- Product Listing
+- Product Details
+- Categories
+- Product Search
+- Filters
+- Sorting
+- Featured Products
+
+## Shopping
+
+- Shopping Cart
+- Wishlist
+- Checkout
+- Coupon Codes
+- Order History
+
+## Reviews
+
+- Product Ratings
+- User Reviews
+- Review Management
+
+## Admin Panel
+
+- Dashboard
+- Product Management
+- Order Management
+- User Management
+- Category Management
+
+---
+
+# 🏗 Tech Stack
+
+## Backend
+
+- FastAPI
+- SQLAlchemy 2.0
+- PostgreSQL
+- Alembic
+- Pydantic
+- JWT Authentication
+- Passlib
+- Uvicorn
+
+## Frontend
+
+- HTML5
+- CSS3
+- JavaScript
+- Jinja2 Templates
+
+---
+
+# 📂 Project Structure
 
 ```
 project/
 │
 ├── app/
-│   ├── routers/       # REST API Endpoints (/api/v1/...)
-│   ├── views/         # Jinja2 Template View Controllers
-│   ├── models/        # SQLAlchemy 2.0 ORM Models
-│   ├── schemas/       # Pydantic Schemas
-│   ├── middleware/    # JWT Authentication & Telemetry Middleware
-│   ├── templates/     # Jinja2 HTML Templates
-│   ├── static/        # CSS, Vanilla JS, and Image Assets
-│   │   ├── css/
-│   │   ├── js/
-│   │   └── images/
-│   ├── database.py    # Database Session & Fallback Configuration
-│   ├── seed.py        # Automated Database Seeding Engine
-│   └── main.py        # Main FastAPI Application Initialization
+│   ├── routers/
+│   ├── views/
+│   ├── middleware/
+│   ├── models.py
+│   ├── schemas.py
+│   ├── database.py
+│   ├── config.py
+│   └── main.py
 │
-├── alembic/           # Database Migration Scripts
-├── alembic.ini        # Alembic Configuration
-├── main.py            # Application Server Entrypoint
-├── requirements.txt   # Python Dependencies
-├── README.md          # Project Documentation
-└── .env.example       # Environment Variable Template
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+├── templates/
+│
+├── alembic/
+│
+├── uploads/
+│
+├── requirements.txt
+└── main.py
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+# 🚀 Installation
 
-### 1. Prerequisites
-- Python 3.13+ installed
-- PostgreSQL (optional — automatic SQLite fallback included for local development)
-
-### 2. Installation
-Clone the repository and set up a virtual environment:
+Clone the repository
 
 ```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# Linux/macOS
-source venv/bin/activate
+git clone https://github.com/Vikki-2006/VEXO-Commerce.git
 ```
 
-Install Python dependencies:
+Go to project
+
+```bash
+cd VEXO-Commerce
+```
+
+Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Environment Configuration
-Copy `.env.example` to `.env` and set your credentials:
+Configure environment
 
-```bash
-cp .env.example .env
+```env
+DATABASE_URL=
+JWT_SECRET=
+PORT=
 ```
 
-### 4. Database Setup & Seeding
-The database tables and seed data (products, categories, demo users) are generated automatically on startup.
-
-To manage migrations via Alembic:
-
-```bash
-alembic upgrade head
-```
-
-### 5. Running the Application
+Run server
 
 ```bash
 python main.py
-# OR
-uvicorn app.main:app --reload --port 5000
 ```
 
-Open your browser at:
-- **Web Application**: `http://localhost:5000`
-- **Interactive OpenAPI Documentation**: `http://localhost:5000/docs`
+or
+
+```bash
+uvicorn app.main:app --reload
+```
 
 ---
 
-## 👤 Demo Access Credentials
+# 📷 Screenshots
 
-| Role | Email | Password | Access |
-|------|-------|----------|--------|
-| **Administrator** | `admin@vexo.systems` | `admin123` | Full Admin Dashboard & Device Control |
-| **Customer** | `user@vexo.systems` | `user123` | Full Checkout & Dispatch Telemetry |
+- Premium Landing Page
+- Product Catalog
+- Product Details
+- Shopping Cart
+- Authentication
+- Admin Dashboard
+
+(Add screenshots later.)
 
 ---
 
-## 💻 Tech Stack Summary
+# 📌 Roadmap
 
-- **Backend Framework**: FastAPI
-- **Templating Engine**: Jinja2
-- **Database ORM**: SQLAlchemy 2.0
-- **Database Migrations**: Alembic
-- **Primary Database**: PostgreSQL (SQLite fallback)
-- **Authentication**: JWT (JSON Web Tokens) with bcrypt password hashing
-- **Frontend Styling**: HTML5, CSS3, Tailwind CSS (via CDN)
-- **Frontend Scripting**: Vanilla JavaScript
+- [x] Authentication
+- [x] Product Management
+- [x] Shopping Cart
+- [x] Wishlist
+- [x] Reviews
+- [x] Orders
+- [x] Coupons
+- [x] Admin Dashboard
+- [ ] Payment Gateway
+- [ ] Email Notifications
+- [ ] Deployment
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
+
+---
