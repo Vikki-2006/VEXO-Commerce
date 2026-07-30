@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /account/
-
-Sitemap: https://vexo.systems/sitemap.xml

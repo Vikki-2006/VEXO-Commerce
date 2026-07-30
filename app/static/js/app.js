@@ -1021,7 +1021,7 @@ const VexoStore = {
           </div>
           
           <button 
-            onclick="VexoStore.handleProductCardWishlist(event, ${JSON.stringify(product).replace(/'/g, "&#39;")})"
+            onclick="VexoStore.handleProductCardWishlist(event, '${product.id}')"
             class="absolute top-3 right-3 p-2 rounded-full border transition-all z-10 ${isWish ? 'bg-ink text-ivory border-ink shadow-md' : 'bg-card/90 text-stone hover:text-ink border-sand hover:bg-card'}"
             title="${isWish ? 'Remove from Wishlist' : 'Add to Wishlist'}"
           >
@@ -1030,14 +1030,14 @@ const VexoStore = {
           
           <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
             <button 
-              onclick="VexoStore.handleProductCardQuickView(event, ${JSON.stringify(product).replace(/'/g, "&#39;")})"
+              onclick="VexoStore.handleProductCardQuickView(event, '${product.id}')"
               class="flex-1 py-2 px-3 rounded-lg bg-ink hover:bg-titanium text-ivory text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-subtle cursor-pointer"
             >
               <i data-lucide="eye" class="w-3.5 h-3.5"></i> Quick View
             </button>
             
             <button 
-              onclick="VexoStore.handleProductCardCompare(event, ${JSON.stringify(product).replace(/'/g, "&#39;")})"
+              onclick="VexoStore.handleProductCardCompare(event, '${product.id}')"
               class="p-2 rounded-lg border transition-colors cursor-pointer ${compared ? 'bg-gold text-white border-gold' : 'bg-card text-stone hover:text-ink border-sand'}"
               title="${compared ? 'In Compare' : 'Add to Compare'}"
             >
@@ -1069,7 +1069,7 @@ const VexoStore = {
             </div>
             
             <button 
-              onclick="VexoStore.handleProductCardAddToCart(event, ${JSON.stringify(product).replace(/'/g, "&#39;")})"
+              onclick="VexoStore.handleProductCardAddToCart(event, '${product.id}')"
               class="p-2.5 rounded-lg bg-warm hover:bg-ink hover:text-ivory border border-sand text-ink transition-all shadow-subtle flex items-center justify-center cursor-pointer"
               title="Add to Bag"
             >
