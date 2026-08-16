@@ -33,6 +33,15 @@ def view_home(request: Request, db: Session = Depends(get_db)):
         except Exception as e:
             print(f"[PAGE VIEW WARNING] Database query failed in view_home: {e}")
 
+    # Fallback to static showcase data if empty/unavailable
+    if not featured_products:
+        from app.fallback_data import FALLBACK_PRODUCTS
+        featured_products = [p for p in FALLBACK_PRODUCTS if p.get("isFeatured")][:8]
+
+    if not categories:
+        from app.fallback_data import FALLBACK_CATEGORIES
+        categories = FALLBACK_CATEGORIES
+
     return templates.TemplateResponse(
         request=request,
         name="home.html",
@@ -89,6 +98,23 @@ def view_shop(
         except Exception as e:
             print(f"[PAGE VIEW WARNING] Database query failed in view_shop: {e}")
 
+    # Fallback to static showcase data if empty/unavailable
+    if not products:
+        from app.fallback_data import get_fallback_products_filtered
+        products, total = get_fallback_products_filtered(
+            search=search,
+            category=category,
+            maxPrice=maxPrice,
+            rating=rating,
+            sort=sort,
+            page=page,
+            limit=limit
+        )
+
+    if not categories_raw:
+        from app.fallback_data import FALLBACK_CATEGORIES
+        categories_raw = FALLBACK_CATEGORIES
+
     return templates.TemplateResponse(
         request=request,
         name="shop.html",
@@ -110,6 +136,9 @@ def view_shop(
 
 @router.get("/product/{slug}", response_class=HTMLResponse)
 def view_product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
+    product = None
+    related_products = []
+
     if db is not None:
         try:
             product_raw = db.query(Product).options(
@@ -126,19 +155,27 @@ def view_product_detail(request: Request, slug: str, db: Session = Depends(get_d
                     Product.id != product_raw.id
                 ).limit(5).all()
                 related_products = [format_product(p) for p in related_raw]
-
-                return templates.TemplateResponse(
-                    request=request,
-                    name="product_detail.html",
-                    context={
-                        "product": product,
-                        "related_products": related_products
-                    }
-                )
         except Exception as e:
             print(f"[PAGE VIEW WARNING] Database query failed in view_product_detail: {e}")
 
-    return templates.TemplateResponse(request=request, name="errors/404.html", status_code=404)
+    # Fallback to static showcase data if empty/unavailable
+    if not product:
+        from app.fallback_data import FALLBACK_PRODUCTS
+        found = [p for p in FALLBACK_PRODUCTS if p["slug"] == slug or p["id"] == slug]
+        if found:
+            product = found[0]
+            related_products = [p for p in FALLBACK_PRODUCTS if p["categoryId"] == product["categoryId"] and p["id"] != product["id"]][:5]
+        else:
+            return templates.TemplateResponse(request=request, name="errors/404.html", status_code=404)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="product_detail.html",
+        context={
+            "product": product,
+            "related_products": related_products
+        }
+    )
 
 @router.get("/categories", response_class=HTMLResponse)
 def view_categories(request: Request, db: Session = Depends(get_db)):
@@ -158,6 +195,11 @@ def view_categories(request: Request, db: Session = Depends(get_db)):
                 })
         except Exception as e:
             print(f"[PAGE VIEW WARNING] Database query failed in view_categories: {e}")
+
+    # Fallback to static showcase data if empty/unavailable
+    if not categories:
+        from app.fallback_data import FALLBACK_CATEGORIES
+        categories = FALLBACK_CATEGORIES
 
     return templates.TemplateResponse(
         request=request,

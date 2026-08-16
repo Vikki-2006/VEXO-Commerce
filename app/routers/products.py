@@ -84,56 +84,66 @@ def get_products(
     limit: int = 12,
     db: Session = Depends(get_db)
 ):
-    if db is None:
-        return {
-            "products": [],
-            "pagination": {
-                "total": 0,
-                "page": page,
-                "limit": limit,
-                "totalPages": 1,
-            }
-        }
+    products = []
+    total = 0
 
-    query = db.query(Product).options(joinedload(Product.category))
+    if db is not None:
+        try:
+            query = db.query(Product).options(joinedload(Product.category))
 
-    if search:
-        term = f"%{search}%"
-        query = query.filter(
-            or_(
-                Product.title.ilike(term),
-                Product.description.ilike(term),
-                Product.subtitle.ilike(term)
-            )
-        )
+            if search:
+                term = f"%{search}%"
+                query = query.filter(
+                    or_(
+                        Product.title.ilike(term),
+                        Product.description.ilike(term),
+                        Product.subtitle.ilike(term)
+                    )
+                )
 
-    if category:
-        query = query.join(Category).filter(Category.slug == category)
+            if category:
+                query = query.join(Category).filter(Category.slug == category)
 
-    if minPrice is not None:
-        query = query.filter(Product.price >= minPrice)
-    if maxPrice is not None:
-        query = query.filter(Product.price <= maxPrice)
+            if minPrice is not None:
+                query = query.filter(Product.price >= minPrice)
+            if maxPrice is not None:
+                query = query.filter(Product.price <= maxPrice)
 
-    if rating is not None:
-        query = query.filter(Product.rating >= rating)
+            if rating is not None:
+                query = query.filter(Product.rating >= rating)
 
-    if sort == "price-asc":
-        query = query.order_by(Product.price.asc())
-    elif sort == "price-desc":
-        query = query.order_by(Product.price.desc())
-    elif sort == "rating":
-        query = query.order_by(Product.rating.desc())
-    elif sort == "featured":
-        query = query.order_by(Product.isFeatured.desc(), Product.createdAt.desc())
+            if sort == "price-asc":
+                query = query.order_by(Product.price.asc())
+            elif sort == "price-desc":
+                query = query.order_by(Product.price.desc())
+            elif sort == "rating":
+                query = query.order_by(Product.rating.desc())
+            elif sort == "featured":
+                query = query.order_by(Product.isFeatured.desc(), Product.createdAt.desc())
+            else:
+                query = query.order_by(Product.createdAt.desc())
+
+            total = query.count()
+            skip = (page - 1) * limit
+            products = query.offset(skip).limit(limit).all()
+        except Exception as e:
+            print(f"[API PRODUCTS WARNING] Database query failed: {e}")
+
+    formatted = []
+    if products:
+        formatted = [format_product(p) for p in products]
     else:
-        query = query.order_by(Product.createdAt.desc())
-
-    total = query.count()
-    skip = (page - 1) * limit
-    products = query.offset(skip).limit(limit).all()
-
-    formatted = [format_product(p) for p in products]
+        from app.fallback_data import get_fallback_products_filtered
+        formatted, total = get_fallback_products_filtered(
+            search=search,
+            category=category,
+            minPrice=minPrice,
+            maxPrice=maxPrice,
+            rating=rating,
+            sort=sort,
+            page=page,
+            limit=limit
+        )
 
     return {
         "products": formatted,
@@ -147,18 +157,26 @@ def get_products(
 
 @router.get("/{slug}")
 def get_product_by_slug(slug: str, db: Session = Depends(get_db)):
-    if db is None:
-        raise HTTPException(status_code=404, detail="Product not found")
+    product = None
+    if db is not None:
+        try:
+            product = db.query(Product).options(
+                joinedload(Product.category),
+                joinedload(Product.reviews).joinedload(Review.user)
+            ).filter(or_(Product.slug == slug, Product.id == slug)).first()
+        except Exception as e:
+            print(f"[API PRODUCT DETAIL WARNING] Database query failed: {e}")
 
-    product = db.query(Product).options(
-        joinedload(Product.category),
-        joinedload(Product.reviews).joinedload(Review.user)
-    ).filter(or_(Product.slug == slug, Product.id == slug)).first()
+    if product:
+        return format_product(product)
 
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+    # Fallback to static data
+    from app.fallback_data import FALLBACK_PRODUCTS
+    found = [p for p in FALLBACK_PRODUCTS if p["slug"] == slug or p["id"] == slug]
+    if found:
+        return found[0]
 
-    return format_product(product)
+    raise HTTPException(status_code=404, detail="Product not found")
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_product(

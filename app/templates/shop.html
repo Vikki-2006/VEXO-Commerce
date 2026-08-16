@@ -132,7 +132,7 @@
           data-product-card-id="{{ product.id }}"
           onmousemove="VexoStore.handleProductCardMouseMove(event, this)"
           onmouseleave="VexoStore.handleProductCardMouseLeave(this)"
-          class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition"
+          class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition scroll-reveal"
         >
           <div class="relative aspect-square rounded-lg overflow-hidden bg-warm mb-4 border border-sand/60">
             <a href="/product/{{ product.slug }}">
@@ -140,7 +140,9 @@
                 src="{{ product.images[0] }}" 
                 alt="{{ product.title }}" 
                 class="w-full h-full object-cover transition-transform duration-300 product-card-image"
-                style="transform: translate(0px, 0px) scale(1);"
+                loading="lazy"
+                decoding="async"
+                style="transform: translate3d(0px, 0px, 0) scale(1);"
               >
             </a>
             

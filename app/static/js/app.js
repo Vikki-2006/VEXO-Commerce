@@ -1004,7 +1004,7 @@ const VexoStore = {
         data-product-card-id="${product.id}"
         onmousemove="VexoStore.handleProductCardMouseMove(event, this)"
         onmouseleave="VexoStore.handleProductCardMouseLeave(this)"
-        class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition"
+        class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition scroll-reveal"
       >
         <div class="relative aspect-square rounded-lg overflow-hidden bg-warm mb-4 border border-sand/60">
           <a href="/product/${product.slug}">
@@ -1012,7 +1012,9 @@ const VexoStore = {
               src="${product.images[0]}" 
               alt="${product.title}" 
               class="w-full h-full object-cover transition-transform duration-300 product-card-image"
-              style="transform: translate(0px, 0px) scale(1);"
+              loading="lazy"
+              decoding="async"
+              style="transform: translate3d(0px, 0px, 0) scale(1);"
             >
           </a>
           
@@ -1414,51 +1416,112 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Scroll progress and back to top button handlers
-window.addEventListener('scroll', () => {
-  const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
+// Throttled Scroll Management
+let scrollHeightCache = 0;
+let headerScrolled = false;
+let backBtnVisible = false;
+let isScrollThrottled = false;
+
+function updateScrollStats() {
+  if (!scrollHeightCache) {
+    scrollHeightCache = document.documentElement.scrollHeight;
+  }
+  const currentScrollY = window.scrollY;
+  const totalHeight = scrollHeightCache - window.innerHeight;
+  const progress = totalHeight > 0 ? (currentScrollY / totalHeight) * 100 : 0;
+  
   const bar = document.getElementById('scroll-progress');
   if (bar) bar.style.width = `${progress}%`;
   
   const backBtn = document.getElementById('back-to-top');
   if (backBtn) {
-    if (window.scrollY > 400) {
-      backBtn.classList.remove('scale-0', 'translate-y-4', 'opacity-0');
-      backBtn.classList.add('scale-100', 'translate-y-0', 'opacity-100');
-    } else {
-      backBtn.classList.remove('scale-100', 'translate-y-0', 'opacity-100');
-      backBtn.classList.add('scale-0', 'translate-y-4', 'opacity-0');
+    const shouldBeVisible = currentScrollY > 400;
+    if (shouldBeVisible !== backBtnVisible) {
+      backBtnVisible = shouldBeVisible;
+      if (shouldBeVisible) {
+        backBtn.classList.remove('scale-0', 'translate-y-4', 'opacity-0');
+        backBtn.classList.add('scale-100', 'translate-y-0', 'opacity-100');
+      } else {
+        backBtn.classList.remove('scale-100', 'translate-y-0', 'opacity-100');
+        backBtn.classList.add('scale-0', 'translate-y-4', 'opacity-0');
+      }
     }
   }
   
-  // Change header background opacity on scroll
   const header = document.getElementById('main-header');
   if (header) {
-    if (window.scrollY > 20) {
-      header.className = 'fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-ivory/95 backdrop-blur-md border-b border-sand py-3 shadow-subtle';
-    } else {
-      header.className = 'fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-transparent py-6';
+    const shouldBeScrolled = currentScrollY > 20;
+    if (shouldBeScrolled !== headerScrolled) {
+      headerScrolled = shouldBeScrolled;
+      if (shouldBeScrolled) {
+        header.className = 'fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-ivory/95 backdrop-blur-md border-b border-sand py-3 shadow-subtle';
+      } else {
+        header.className = 'fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-transparent py-6';
+      }
     }
   }
+  
+  isScrollThrottled = false;
+}
+
+window.addEventListener('scroll', () => {
+  if (!isScrollThrottled) {
+    isScrollThrottled = true;
+    requestAnimationFrame(updateScrollStats);
+  }
+}, { passive: true });
+
+window.addEventListener('resize', () => {
+  scrollHeightCache = 0; // invalidate cache
 });
 
 // Action bridges for product card mouse movement & events
 window.VexoStore.handleProductCardMouseMove = (e, el) => {
-  const rect = el.getBoundingClientRect();
+  if (!el._rect) {
+    el._rect = el.getBoundingClientRect();
+  }
+  const rect = el._rect;
   const x = (e.clientX - rect.left) / rect.width - 0.5;
   const y = (e.clientY - rect.top) / rect.height - 0.5;
   const img = el.querySelector('.product-card-image');
   if (img) {
-    img.style.transform = `translate(${x * 8}px, ${y * 8}px) scale(1.04)`;
+    img.style.transform = `translate3d(${x * 8}px, ${y * 8}px, 0) scale(1.04)`;
   }
 };
 window.VexoStore.handleProductCardMouseLeave = (el) => {
+  el._rect = null;
   const img = el.querySelector('.product-card-image');
   if (img) {
-    img.style.transform = `translate(0px, 0px) scale(1)`;
+    img.style.transform = `translate3d(0px, 0px, 0) scale(1)`;
   }
 };
+
+// Intersection Observer for Scroll Reveals
+document.addEventListener('DOMContentLoaded', () => {
+  const revealElements = document.querySelectorAll('.scroll-reveal');
+  if ('IntersectionObserver' in window && revealElements.length > 0) {
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -60px 0px',
+      threshold: 0.05
+    };
+    
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    revealElements.forEach(el => {
+      observer.observe(el);
+    });
+  } else {
+    revealElements.forEach(el => el.classList.add('active'));
+  }
+});
 const resolveProduct = (item) => {
   if (typeof item === 'string') {
     return window.VexoStore.productsRegistry[item] || null;
