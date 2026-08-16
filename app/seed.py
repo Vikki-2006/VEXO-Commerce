@@ -6,8 +6,15 @@ from app.middleware.auth import hash_password
 
 def seed_db():
     print("[SEED] Starting database seed for VEXO Systems (FastAPI + SQLAlchemy)...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    if engine is None or SessionLocal is None:
+        print("[SEED] Database engine not available. Skipping seed.")
+        return
+
+    try:
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"[SEED WARNING] Could not recreate tables: {e}")
 
     db = SessionLocal()
     try:

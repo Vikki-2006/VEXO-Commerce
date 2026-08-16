@@ -8,6 +8,20 @@ router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 
 @router.get("/metrics")
 def get_dashboard_metrics(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    if db is None:
+        return {
+            "metrics": {
+                "totalRevenue": 0.0,
+                "totalOrders": 0,
+                "totalUsers": 0,
+                "totalProducts": 0,
+                "conversionRate": "0.00%",
+                "avgOrderValue": "0.00",
+            },
+            "monthlySales": [],
+            "topProducts": [],
+        }
+
     total_users = db.query(User).count()
     total_products = db.query(Product).count()
     total_orders = db.query(Order).count()

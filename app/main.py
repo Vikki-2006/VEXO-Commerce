@@ -15,18 +15,23 @@ from app.views import pages, auth_views, account_views, cart_views, admin_views
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize Database Tables
-    Base.metadata.create_all(bind=engine)
-    
-    # Auto-seed database if empty
-    db: Session = SessionLocal()
-    try:
-        if db.query(User).count() == 0:
-            seed_db()
-    except Exception as e:
-        print(f"Seed warning: {e}")
-    finally:
-        db.close()
+    # Initialize Database Tables & Seed if database engine is available
+    if engine is not None:
+        try:
+            Base.metadata.create_all(bind=engine)
+            
+            # Auto-seed database if empty
+            if SessionLocal is not None:
+                db: Session = SessionLocal()
+                try:
+                    if db.query(User).count() == 0:
+                        seed_db()
+                except Exception as e:
+                    print(f"Seed warning: {e}")
+                finally:
+                    db.close()
+        except Exception as e:
+            print(f"Database initialization warning: {e}")
         
     yield
 
@@ -59,7 +64,7 @@ async def count_requests(request: Request, call_next):
 # Serve static files & uploads
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-uploads_dir = os.path.join(os.path.dirname(__file__), "../uploads")
+uploads_dir = "/tmp/uploads"
 os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 

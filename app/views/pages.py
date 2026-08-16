@@ -12,20 +12,26 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def view_home(request: Request, db: Session = Depends(get_db)):
-    featured_products_raw = db.query(Product).options(joinedload(Product.category)).filter(Product.isFeatured == True).limit(8).all()
-    featured_products = [format_product(p) for p in featured_products_raw]
-
-    categories_raw = db.query(Category).options(joinedload(Category.products)).all()
+    featured_products = []
     categories = []
-    for c in categories_raw:
-        categories.append({
-            "id": c.id,
-            "name": c.name,
-            "slug": c.slug,
-            "description": c.description,
-            "image": c.image,
-            "_count": {"products": len(c.products)}
-        })
+
+    if db is not None:
+        try:
+            featured_products_raw = db.query(Product).options(joinedload(Product.category)).filter(Product.isFeatured == True).limit(8).all()
+            featured_products = [format_product(p) for p in featured_products_raw]
+
+            categories_raw = db.query(Category).options(joinedload(Category.products)).all()
+            for c in categories_raw:
+                categories.append({
+                    "id": c.id,
+                    "name": c.name,
+                    "slug": c.slug,
+                    "description": c.description,
+                    "image": c.image,
+                    "_count": {"products": len(c.products)}
+                })
+        except Exception as e:
+            print(f"[PAGE VIEW WARNING] Database query failed in view_home: {e}")
 
     return templates.TemplateResponse(
         request=request,
@@ -47,34 +53,41 @@ def view_shop(
     page: int = 1,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Product).options(joinedload(Product.category))
-
-    if search:
-        term = f"%{search}%"
-        query = query.filter(Product.title.ilike(term) | Product.description.ilike(term))
-    if category:
-        query = query.join(Category).filter(Category.slug == category)
-    if maxPrice is not None:
-        query = query.filter(Product.price <= maxPrice)
-    if rating is not None:
-        query = query.filter(Product.rating >= rating)
-
-    if sort == "price-asc":
-        query = query.order_by(Product.price.asc())
-    elif sort == "price-desc":
-        query = query.order_by(Product.price.desc())
-    elif sort == "rating":
-        query = query.order_by(Product.rating.desc())
-    else:
-        query = query.order_by(Product.isFeatured.desc(), Product.createdAt.desc())
-
+    products = []
+    categories_raw = []
+    total = 0
     limit = 12
-    total = query.count()
-    skip = (page - 1) * limit
-    products_raw = query.offset(skip).limit(limit).all()
-    products = [format_product(p) for p in products_raw]
 
-    categories_raw = db.query(Category).all()
+    if db is not None:
+        try:
+            query = db.query(Product).options(joinedload(Product.category))
+
+            if search:
+                term = f"%{search}%"
+                query = query.filter(Product.title.ilike(term) | Product.description.ilike(term))
+            if category:
+                query = query.join(Category).filter(Category.slug == category)
+            if maxPrice is not None:
+                query = query.filter(Product.price <= maxPrice)
+            if rating is not None:
+                query = query.filter(Product.rating >= rating)
+
+            if sort == "price-asc":
+                query = query.order_by(Product.price.asc())
+            elif sort == "price-desc":
+                query = query.order_by(Product.price.desc())
+            elif sort == "rating":
+                query = query.order_by(Product.rating.desc())
+            else:
+                query = query.order_by(Product.isFeatured.desc(), Product.createdAt.desc())
+
+            total = query.count()
+            skip = (page - 1) * limit
+            products_raw = query.offset(skip).limit(limit).all()
+            products = [format_product(p) for p in products_raw]
+            categories_raw = db.query(Category).all()
+        except Exception as e:
+            print(f"[PAGE VIEW WARNING] Database query failed in view_shop: {e}")
 
     return templates.TemplateResponse(
         request=request,
@@ -97,45 +110,54 @@ def view_shop(
 
 @router.get("/product/{slug}", response_class=HTMLResponse)
 def view_product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
-    product_raw = db.query(Product).options(
-        joinedload(Product.category),
-        joinedload(Product.reviews)
-    ).filter((Product.slug == slug) | (Product.id == slug)).first()
+    if db is not None:
+        try:
+            product_raw = db.query(Product).options(
+                joinedload(Product.category),
+                joinedload(Product.reviews)
+            ).filter((Product.slug == slug) | (Product.id == slug)).first()
 
-    if not product_raw:
-        return templates.TemplateResponse(request=request, name="errors/404.html", status_code=404)
+            if product_raw:
+                product = format_product(product_raw)
+                
+                # Query related products (frequently bought together)
+                related_raw = db.query(Product).options(joinedload(Product.category)).filter(
+                    Product.categoryId == product_raw.categoryId,
+                    Product.id != product_raw.id
+                ).limit(5).all()
+                related_products = [format_product(p) for p in related_raw]
 
-    product = format_product(product_raw)
-    
-    # Query related products (frequently bought together)
-    related_raw = db.query(Product).options(joinedload(Product.category)).filter(
-        Product.categoryId == product_raw.categoryId,
-        Product.id != product_raw.id
-    ).limit(5).all()
-    related_products = [format_product(p) for p in related_raw]
+                return templates.TemplateResponse(
+                    request=request,
+                    name="product_detail.html",
+                    context={
+                        "product": product,
+                        "related_products": related_products
+                    }
+                )
+        except Exception as e:
+            print(f"[PAGE VIEW WARNING] Database query failed in view_product_detail: {e}")
 
-    return templates.TemplateResponse(
-        request=request,
-        name="product_detail.html",
-        context={
-            "product": product,
-            "related_products": related_products
-        }
-    )
+    return templates.TemplateResponse(request=request, name="errors/404.html", status_code=404)
 
 @router.get("/categories", response_class=HTMLResponse)
 def view_categories(request: Request, db: Session = Depends(get_db)):
-    categories_raw = db.query(Category).options(joinedload(Category.products)).all()
     categories = []
-    for c in categories_raw:
-        categories.append({
-            "id": c.id,
-            "name": c.name,
-            "slug": c.slug,
-            "description": c.description,
-            "image": c.image,
-            "_count": {"products": len(c.products)}
-        })
+
+    if db is not None:
+        try:
+            categories_raw = db.query(Category).options(joinedload(Category.products)).all()
+            for c in categories_raw:
+                categories.append({
+                    "id": c.id,
+                    "name": c.name,
+                    "slug": c.slug,
+                    "description": c.description,
+                    "image": c.image,
+                    "_count": {"products": len(c.products)}
+                })
+        except Exception as e:
+            print(f"[PAGE VIEW WARNING] Database query failed in view_categories: {e}")
 
     return templates.TemplateResponse(
         request=request,

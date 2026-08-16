@@ -15,6 +15,9 @@ def slugify(text: str) -> str:
 
 @router.get("")
 def get_categories(db: Session = Depends(get_db)):
+    if db is None:
+        return []
+
     categories = db.query(Category).options(joinedload(Category.products)).all()
     result = []
     for c in categories:
@@ -35,6 +38,9 @@ def create_category(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     slug = slugify(payload.name)
     category = Category(
         name=payload.name,
@@ -54,6 +60,9 @@ def update_category(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -76,6 +85,9 @@ def delete_category(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")

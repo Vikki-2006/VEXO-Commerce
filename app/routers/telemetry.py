@@ -32,10 +32,13 @@ def get_health():
 @router.get("/telemetry")
 def get_telemetry(db: Session = Depends(get_db)):
     db_status = "Connected"
-    try:
-        db.execute(text("SELECT 1"))
-    except Exception:
+    if db is None:
         db_status = "Disconnected"
+    else:
+        try:
+            db.execute(text("SELECT 1"))
+        except Exception:
+            db_status = "Disconnected"
 
     uptime_sec = int(time.time() - start_time)
     

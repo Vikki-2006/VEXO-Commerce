@@ -84,6 +84,17 @@ def get_products(
     limit: int = 12,
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        return {
+            "products": [],
+            "pagination": {
+                "total": 0,
+                "page": page,
+                "limit": limit,
+                "totalPages": 1,
+            }
+        }
+
     query = db.query(Product).options(joinedload(Product.category))
 
     if search:
@@ -136,6 +147,9 @@ def get_products(
 
 @router.get("/{slug}")
 def get_product_by_slug(slug: str, db: Session = Depends(get_db)):
+    if db is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
     product = db.query(Product).options(
         joinedload(Product.category),
         joinedload(Product.reviews).joinedload(Review.user)
@@ -152,6 +166,9 @@ def create_product(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     slug = slugify(payload.title)
 
     images_str = payload.images if isinstance(payload.images, str) else json.dumps(payload.images)
@@ -183,6 +200,9 @@ def update_product(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -207,6 +227,9 @@ def delete_product(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

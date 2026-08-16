@@ -10,6 +10,9 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterSchema, db: Session = Depends(get_db)):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     if not payload.name or not payload.email or not payload.password:
         raise HTTPException(status_code=400, detail="Name, email, and password are required")
 
@@ -42,6 +45,9 @@ def register(payload: RegisterSchema, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(payload: LoginSchema, db: Session = Depends(get_db)):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     if not payload.email or not payload.password:
         raise HTTPException(status_code=400, detail="Email and password are required")
 

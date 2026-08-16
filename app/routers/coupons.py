@@ -10,6 +10,9 @@ router = APIRouter(prefix="/api/v1/coupons", tags=["Coupons"])
 
 @router.post("/validate")
 def validate_coupon(payload: CouponValidateSchema, db: Session = Depends(get_db)):
+    if db is None:
+        raise HTTPException(status_code=404, detail="Invalid or inactive coupon code")
+
     if not payload.code:
         raise HTTPException(status_code=400, detail="Coupon code required")
 
@@ -44,6 +47,8 @@ def validate_coupon(payload: CouponValidateSchema, db: Session = Depends(get_db)
 
 @router.get("")
 def get_coupons(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    if db is None:
+        return []
     return db.query(Coupon).order_by(Coupon.createdAt.desc()).all()
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -52,6 +57,9 @@ def create_coupon(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     coupon = Coupon(
         code=payload.code.upper(),
         discountType=payload.discountType or "PERCENTAGE",
@@ -67,6 +75,9 @@ def create_coupon(
 
 @router.delete("/{coupon_id}")
 def delete_coupon(coupon_id: str, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
     if not coupon:
         raise HTTPException(status_code=404, detail="Coupon not found")

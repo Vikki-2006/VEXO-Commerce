@@ -13,6 +13,9 @@ def add_review(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if db is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
     if not payload.productId or not payload.rating or not payload.comment:
         raise HTTPException(status_code=400, detail="Product ID, rating, and comment are required")
 
@@ -56,6 +59,9 @@ def add_review(
 
 @router.get("/product/{product_id}")
 def get_product_reviews(product_id: str, db: Session = Depends(get_db)):
+    if db is None:
+        return []
+
     reviews = db.query(Review).options(joinedload(Review.user)).filter(Review.productId == product_id).order_by(Review.createdAt.desc()).all()
     return [
         {
