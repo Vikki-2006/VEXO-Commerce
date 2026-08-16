@@ -35,14 +35,46 @@
   <style>
     /* Performant GPU-friendly Scroll Reveal */
     .scroll-reveal {
-      opacity: 0 !important;
-      transform: translate3d(0, 20px, 0) scale(0.98);
-      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      opacity: 0;
+      transform: translate3d(0, 18px, 0);
+      /* Only transition composited properties - opacity and transform run on GPU with no layout/paint */
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .scroll-reveal.active {
-      opacity: 1 !important;
-      transform: translate3d(0, 0, 0) scale(1) !important;
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      will-change: auto;
+    }
+    /* Override theme-transition to NOT animate box-shadow — it forces paint on every frame */
+    .theme-transition {
+      transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out, border-color 0.5s ease-in-out !important;
+    }
+    /* Header scroll state — toggled via classList.toggle('header-scrolled') in app.js */
+    /* NO backdrop-blur: it forces the GPU compositor to re-render the entire viewport behind the
+       header on every scroll frame, causing catastrophic FPS drops */
+    #main-header {
+      contain: layout;  /* Isolate layout impact to header subtree */
+      transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    #main-header.header-scrolled {
+      background-color: var(--canvas-bg);
+      border-bottom-color: var(--border-color);
+      box-shadow: var(--shadow-subtle);
+    }
+    /* Remove transform transition from studio-card — the JS parallax sets transform on
+       the inner img (product-card-image), not the card. The card's CSS transform .3s
+       would fight with any JS-driven motion and trigger layout on the whole card. */
+    .studio-card {
+      transition: background-color 0.5s ease-in-out, border-color 0.3s, box-shadow 0.3s !important;
+    }
+    /* Promote product card images to their own GPU layer for smooth JS parallax */
+    .product-card-image {
+      will-change: transform;
+    }
+    /* Prevent scroll-chaining jank at page edges */
+    body {
+      overscroll-behavior: none;
     }
   </style>
   {% block extra_css %}{% endblock %}
@@ -53,12 +85,12 @@
   <div class="flex flex-col min-h-screen bg-ivory text-ink selection:bg-gold selection:text-white theme-transition">
     
     <!-- Scroll Progress Bar -->
-    <div class="fixed top-0 left-0 right-0 h-[2.5px] z-50 pointer-events-none bg-transparent">
-      <div id="scroll-progress" class="h-full bg-gold transition-all duration-150 ease-out" style="width: 0%;"></div>
+    <div class="fixed top-0 left-0 right-0 h-[2.5px] z-50 pointer-events-none bg-transparent" style="contain: strict;">
+      <div id="scroll-progress" class="h-full bg-gold ease-out" style="width: 0%; transition: width 0.12s ease-out;"></div>
     </div>
 
     <!-- Header matching Header.tsx -->
-    <header id="main-header" class="fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-transparent py-6">
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-40 transition-colors duration-300 bg-transparent border-b border-transparent py-3.5">
       <div class="max-w-[1700px] 3xl:max-w-[2000px] mx-auto px-4 sm:px-8 lg:px-12">
         <div class="flex items-center justify-between">
           <!-- Brand Logo -->
@@ -142,7 +174,7 @@
       </div>
 
       <!-- Mobile Drawer Menu -->
-      <div id="mobile-menu-drawer" class="md:hidden border-t border-sand bg-ivory/98 backdrop-blur-xl overflow-hidden px-6 py-0 max-h-0 opacity-0 transition-all duration-300 ease-out">
+      <div id="mobile-menu-drawer" class="md:hidden border-t border-sand bg-ivory overflow-hidden px-6 py-0 max-h-0 opacity-0 transition-all duration-300 ease-out">
         <div class="flex flex-col gap-4 py-6">
           <a href="/" class="text-base font-black text-ink hover:text-gold py-1 uppercase tracking-wider">INDEX</a>
           <a href="/shop" class="text-base font-black text-ink hover:text-gold py-1 uppercase tracking-wider">CATALOGUE</a>

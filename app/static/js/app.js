@@ -1004,7 +1004,7 @@ const VexoStore = {
         data-product-card-id="${product.id}"
         onmousemove="VexoStore.handleProductCardMouseMove(event, this)"
         onmouseleave="VexoStore.handleProductCardMouseLeave(this)"
-        class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-all duration-300 overflow-hidden text-ink theme-transition scroll-reveal"
+        class="group relative studio-card rounded-xl p-4 flex flex-col justify-between border border-sand bg-card hover:border-gold/40 hover:shadow-modal transition-[border-color,box-shadow] duration-300 overflow-hidden text-ink scroll-reveal"
       >
         <div class="relative aspect-square rounded-lg overflow-hidden bg-warm mb-4 border border-sand/60">
           <a href="/product/${product.slug}">
@@ -1030,7 +1030,7 @@ const VexoStore = {
             <i data-lucide="heart" class="w-3.5 h-3.5 ${isWish ? 'fill-ivory' : ''}"></i>
           </button>
           
-          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
             <button 
               onclick="VexoStore.handleProductCardQuickView(event, '${product.id}')"
               class="flex-1 py-2 px-3 rounded-lg bg-ink hover:bg-titanium text-ivory text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-subtle cursor-pointer"
@@ -1072,7 +1072,7 @@ const VexoStore = {
             
             <button 
               onclick="VexoStore.handleProductCardAddToCart(event, '${product.id}')"
-              class="p-2.5 rounded-lg bg-warm hover:bg-ink hover:text-ivory border border-sand text-ink transition-all shadow-subtle flex items-center justify-center cursor-pointer"
+              class="p-2.5 rounded-lg bg-warm hover:bg-ink hover:text-ivory border border-sand text-ink transition-colors shadow-subtle flex items-center justify-center cursor-pointer"
               title="Add to Bag"
             >
               <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
@@ -1421,6 +1421,8 @@ let scrollHeightCache = 0;
 let headerScrolled = false;
 let backBtnVisible = false;
 let isScrollThrottled = false;
+let isScrolling = false;
+let scrollTimeout = null;
 
 function updateScrollStats() {
   if (!scrollHeightCache) {
@@ -1453,11 +1455,9 @@ function updateScrollStats() {
     const shouldBeScrolled = currentScrollY > 20;
     if (shouldBeScrolled !== headerScrolled) {
       headerScrolled = shouldBeScrolled;
-      if (shouldBeScrolled) {
-        header.className = 'fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-ivory/95 backdrop-blur-md border-b border-sand py-3 shadow-subtle';
-      } else {
-        header.className = 'fixed top-0 left-0 right-0 z-40 transition-all duration-500 bg-transparent py-6';
-      }
+      // Use toggle instead of full className replacement — avoids full subtree style recalculation
+      // NO backdrop-blur: it forces GPU to re-composite the entire viewport on every scroll frame
+      header.classList.toggle('header-scrolled', shouldBeScrolled);
     }
   }
   
@@ -1465,6 +1465,12 @@ function updateScrollStats() {
 }
 
 window.addEventListener('scroll', () => {
+  isScrolling = true;
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    isScrolling = false;
+  }, 100);
+
   if (!isScrollThrottled) {
     isScrollThrottled = true;
     requestAnimationFrame(updateScrollStats);
@@ -1477,6 +1483,7 @@ window.addEventListener('resize', () => {
 
 // Action bridges for product card mouse movement & events
 window.VexoStore.handleProductCardMouseMove = (e, el) => {
+  if (isScrolling) return; // Suppress card hover transform computations while scrolling
   if (!el._rect) {
     el._rect = el.getBoundingClientRect();
   }

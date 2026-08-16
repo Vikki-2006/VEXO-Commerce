@@ -60,3 +60,20 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Access denied: Admin role required"
         )
     return current_user
+
+def get_optional_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    if not credentials or db is None:
+        return None
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("id")
+        if not user_id:
+            return None
+        return db.query(User).filter(User.id == user_id).first()
+    except Exception:
+        return None
+

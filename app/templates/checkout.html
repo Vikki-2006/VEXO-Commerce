@@ -195,6 +195,19 @@
       </div>
     </div>
   </div>
+  <!-- Empty Bag Notice View -->
+  <div id="checkout-empty-view" class="studio-card rounded-2xl p-12 text-center border-sand bg-card space-y-4 max-w-xl mx-auto my-12 hidden shadow-modal">
+    <div class="w-16 h-16 rounded-2xl bg-warm border border-sand flex items-center justify-center mx-auto mb-4 text-stone">
+      <i data-lucide="shopping-bag" class="w-8 h-8 text-gold"></i>
+    </div>
+    <h3 class="text-xl font-bold text-ink font-serif">Your shopping bag is empty</h3>
+    <p class="text-xs text-stone max-w-sm mx-auto font-semibold">
+      Add items to your bag before proceeding with express checkout.
+    </p>
+    <a href="/shop" class="btn-matte btn-primary px-6 py-3 text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer mt-2">
+      Explore Catalogue Index <i data-lucide="arrow-right" class="w-4 h-4 text-gold"></i>
+    </a>
+  </div>
 </div>
 {% endblock %}
 
@@ -204,20 +217,18 @@
     shippingMethod: 'standard',
     
     init() {
-      // Direct login gate
-      if (!VexoStore.auth.isAuthenticated()) {
-        VexoStore.toasts.add({
-          type: 'info',
-          title: 'Authentication Required',
-          message: 'Please sign in to proceed with the checkout.'
-        });
-        window.location.href = '/auth?redirect=/checkout';
-        return;
-      }
-      
-      const user = VexoStore.auth.getUser();
-      if (user && user.name) {
-        document.getElementById('pay-name').value = user.name;
+      // Pre-fill user data if logged in, or set default showcase guest name
+      if (VexoStore.auth.isAuthenticated()) {
+        const user = VexoStore.auth.getUser();
+        if (user && user.name) {
+          const nameInput = document.getElementById('pay-name');
+          if (nameInput) nameInput.value = user.name;
+        }
+      } else {
+        const nameInput = document.getElementById('pay-name');
+        if (nameInput && !nameInput.value) {
+          nameInput.value = 'Showcase Guest';
+        }
       }
       
       this.updateSummary();
@@ -243,10 +254,18 @@
     
     updateSummary() {
       const items = VexoStore.cart.getItems();
-      if (items.length === 0) {
-        window.location.href = '/shop';
+      const activeView = document.getElementById('checkout-active-view');
+      const emptyView = document.getElementById('checkout-empty-view');
+      const completedView = document.getElementById('checkout-completed-view');
+
+      if (items.length === 0 && (!completedView || completedView.classList.contains('hidden'))) {
+        if (activeView) activeView.classList.add('hidden');
+        if (emptyView) emptyView.classList.remove('hidden');
         return;
       }
+
+      if (activeView) activeView.classList.remove('hidden');
+      if (emptyView) emptyView.classList.add('hidden');
       
       const count = VexoStore.cart.getItemCount();
       document.getElementById('checkout-summary-count').textContent = count;
