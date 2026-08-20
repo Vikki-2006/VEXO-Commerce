@@ -14,6 +14,7 @@
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Vexo%20Commerce-blue?style=for-the-badge)](https://vexo-commerce.vercel.app/)
 ---
 
 ## 📖 Overview
