@@ -1,7 +1,5 @@
 
 
- \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 # 🛒 VEXO-Commerce 
 
 > A modern, production-ready Full Stack E-Commerce Platform built with **FastAPI**, **Jinja2**, **PostgreSQL**, **SQLAlchemy**, and **React-inspired UI**.
